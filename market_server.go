@@ -1,43 +1,21 @@
 package main
 
 import (
-	"time"
 	"database/sql"
 	"flag"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
+	"time"
 
-	"github.com/appleboy/gin-jwt"
+	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/logger"
 )
 
-// Login struct
-type Login struct {
-	Username string `form:"username" json:"username" binding:"required"`
-	Password string `form:"password" json:"password" binding:"required"`
-}
-
 var identityKey = "id"
-
-// User demo
-type User struct {
-	UserName  string
-	FirstName string
-	LastName  string
-}
-
-// Product struct
-type Product struct {
-	ID             int64  `json:"id"`
-	Name           string `json:"name"`
-	Price          string `json:"price"`
-	ImageExtension string `json:"image_extension"`
-}
 
 var db *sql.DB
 
@@ -85,17 +63,28 @@ connect:
 	router := gin.Default()
 
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
-		Realm:       "Flex Market",
-		PrivKeyFile: "jwtRS256.key",
-		PubKeyFile: "jwtRS256pub.key",
-		SigningAlgorithm: "RS512",
-		Timeout:     time.Hour,
-		MaxRefresh:  time.Hour,
-		IdentityKey: identityKey,
+		Realm:            "Flex Market",
+		PrivKeyFile:      "jwtRS256.key",
+		PubKeyFile:       "jwtRS256pub.key",
+		SigningAlgorithm: "RS256",
+		Timeout:          time.Hour,
+		MaxRefresh:       time.Hour,
+		IdentityKey:      identityKey,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*User); ok {
+				jti, _ := GenerateRandomString(10)
+
+				_, err = db.Exec("update users set jti = ? where id = ?", jti, 1)
+
+				if err != nil {
+					logger.Errorf("[DB Query : SetJTI] %v; jti = %v", err, jti)
+				}
+
 				return jwt.MapClaims{
 					identityKey: v.UserName,
+					// The "jti" (JWT ID) claim provides a unique identifier for the JWT.
+					// https://tools.ietf.org/html/rfc7519#section-4.1.7
+					"jti": jti,
 				}
 			}
 			return jwt.MapClaims{}
@@ -104,6 +93,7 @@ connect:
 			claims := jwt.ExtractClaims(c)
 			return &User{
 				UserName: claims["id"].(string),
+				JTI: claims["jti"].(string),
 			}
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
@@ -125,8 +115,22 @@ connect:
 			return nil, jwt.ErrFailedAuthentication
 		},
 		Authorizator: func(data interface{}, c *gin.Context) bool {
-			if v, ok := data.(*User); ok && v.UserName == "admin" {
-				return true
+			var currentJTI string
+
+			row := db.QueryRow("select jti from users where id = ?", 1)
+			err := row.Scan(&currentJTI)
+
+			if err != nil {
+				logger.Errorf("[DB Query : FetchJTI : row.Scan] %v; jti = %v", err, currentJTI)
+				c.JSON(
+					http.StatusNotImplemented,
+					gin.H{
+						"status":  http.StatusNotImplemented,
+						"message": err.Error()})
+			} else {
+				if v, ok := data.(*User); ok && v.UserName == "admin" && v.JTI == currentJTI {
+					return true
+				}
 			}
 
 			return false
@@ -185,188 +189,4 @@ connect:
 		v1.DELETE("products/:id", DeleteProduct)
 	}
 	router.Run()
-}
-
-// UploadImage loads image from post request to memory
-func UploadImage(product *Product, c *gin.Context) {
-	file, err := c.FormFile("image")
-	if err != nil {
-		logger.Errorf("[DB Query : CreateProduct : FormFile()] %v", err)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
-		return
-	}
-
-	filename := "images/" + strconv.FormatInt(product.ID, 10) + "." + product.ImageExtension
-	if err := c.SaveUploadedFile(file, filename); err != nil {
-		logger.Errorf("[DB Query : CreateProduct : SaveUploadedFile()] %v", err)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
-		return
-	}
-}
-
-/* Handlers */
-
-func HelloHandler(c *gin.Context) {
-	claims := jwt.ExtractClaims(c)
-	user, _ := c.Get(identityKey)
-	c.JSON(200, gin.H{
-		"userID":   claims["id"],
-		"userName": user.(*User).UserName,
-		"text":     "Hello World.",
-	})
-}
-
-// CreateProduct creates new product
-func CreateProduct(c *gin.Context) {
-	product := Product{
-		Name:           c.PostForm("name"),
-		Price:          c.PostForm("price"),
-		ImageExtension: c.PostForm("image_extension"),
-	}
-
-	result, err := db.Exec(
-		"insert into products (name, price, image_extension) values (?, ?, ?)",
-		product.Name,
-		product.Price,
-		product.ImageExtension)
-
-	if err != nil {
-		logger.Errorf("[DB Query : CreateProduct] %v", err)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
-	} else {
-		product.ID, err = result.LastInsertId()
-		if err != nil {
-			logger.Errorf("[DB Query : CreateProduct : LastInsertID] %v; ", err)
-			c.JSON(
-				http.StatusNotImplemented,
-				gin.H{
-					"status":  http.StatusNotImplemented,
-					"message": err.Error()})
-		} else {
-			UploadImage(&product, c)
-
-			logger.Infof("Product [%v] created", product)
-			c.JSON(http.StatusCreated, gin.H{"productID": product.ID})
-		}
-	}
-}
-
-// FetchAllProducts fetches all products
-func FetchAllProducts(c *gin.Context) {
-	var products []Product
-
-	rows, err := db.Query("select id, name, price, image_extension from products")
-	if err != nil {
-		logger.Errorf("[DB Query : FetchAllProducts] %v", err)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
-	} else {
-		for rows.Next() {
-			p := Product{}
-
-			err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageExtension)
-
-			if err != nil {
-				logger.Errorf("[DB Query : FetchAllProducts : rows.Scan] %v", err)
-				continue
-			}
-			products = append(products, p)
-		}
-		logger.Infof("Products fetched")
-		c.JSON(http.StatusOK, products)
-	}
-}
-
-// FetchSingleProduct fetches single product
-func FetchSingleProduct(c *gin.Context) {
-	var product Product
-	productID := c.Param("id")
-
-	row := db.QueryRow("select id, name, price, image_extension from products where id = ?", productID)
-	err := row.Scan(&product.ID, &product.Name, &product.Price, &product.ImageExtension)
-
-	if err != nil {
-		logger.Errorf("[DB Query : FetchSingleProduct : row.Scan] %v; productID = %v", err, productID)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
-	} else {
-		logger.Infof("Product %v fetched", productID)
-		c.JSON(http.StatusOK, product)
-	}
-}
-
-// UpdateProduct updates product
-func UpdateProduct(c *gin.Context) {
-	product := Product{}
-
-	product.ID, _ = strconv.ParseInt(c.Param("id"), 10, 64)
-	product.Name = c.PostForm("name")
-	product.Price = c.PostForm("price")
-	product.ImageExtension = c.PostForm("image_extension")
-
-	_, err := db.Exec(
-		"update products SET name = ?, price = ?, image_extension = ? where id = ?",
-		product.Name,
-		product.Price,
-		product.ImageExtension,
-		product.ID)
-
-	if err != nil {
-		logger.Errorf("[DB Query : UpdateProduct] %v; product = %v", err, product)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
-	} else {
-		UploadImage(&product, c)
-
-		logger.Infof("Product %v updated to name = %v, price = %v, image_extension = %v", product.ID, product.Name, product.Price, product.ImageExtension)
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"status":  http.StatusOK,
-				"message": "Product updated successfully!"})
-	}
-}
-
-// DeleteProduct deletes product
-func DeleteProduct(c *gin.Context) {
-	productID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-
-	_, err := db.Exec("delete from products where id = ?", productID)
-
-	if err != nil {
-		logger.Errorf("[DB Query : DeleteProduct] %v; productID = %v", err, productID)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
-	} else {
-		logger.Infof("Product %v deleted", productID)
-		c.JSON(
-			http.StatusOK,
-			gin.H{
-				"status":  http.StatusOK,
-				"message": "Product deleted successfully!"})
-	}
 }
