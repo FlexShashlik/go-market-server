@@ -15,8 +15,6 @@ import (
 	"github.com/google/logger"
 )
 
-var identityKey = "id"
-
 var db *sql.DB
 
 func main() {
@@ -69,19 +67,20 @@ connect:
 		SigningAlgorithm: "RS256",
 		Timeout:          time.Hour,
 		MaxRefresh:       time.Hour,
-		IdentityKey:      identityKey,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*User); ok {
 				jti, _ := GenerateRandomString(10)
+				
+				logger.Infof("User = %v", v)
 
 				_, err = db.Exec("update users set jti = ? where id = ?", jti, 1)
 
 				if err != nil {
 					logger.Errorf("[DB Query : SetJTI] %v; jti = %v", err, jti)
 				}
-
+				//fetch v.ID value from db
 				return jwt.MapClaims{
-					identityKey: v.UserName,
+					"id": v.ID,
 					// The "jti" (JWT ID) claim provides a unique identifier for the JWT.
 					// https://tools.ietf.org/html/rfc7519#section-4.1.7
 					"jti": jti,
@@ -92,21 +91,20 @@ connect:
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
 			return &User{
-				UserName: claims["id"].(string),
+				ID: claims["id"].(int64),
 				JTI: claims["jti"].(string),
 			}
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
-			var loginVals Login
-			if err := c.ShouldBind(&loginVals); err != nil {
+			var login Login
+			if err := c.ShouldBind(&login); err != nil {
 				return "", jwt.ErrMissingLoginValues
 			}
-			userID := loginVals.Username
-			password := loginVals.Password
 
-			if (userID == "admin" && password == "admin") || (userID == "test" && password == "test") {
-				return &User{
-					UserName:  userID,
+			logger.Infof("User == %v", login)
+
+			if (login.Email == "admin@admin.com") {
+				return &User{//todo ID set from db
 					LastName:  "Flexyan",
 					FirstName: "Sevada",
 				}, nil
@@ -128,7 +126,7 @@ connect:
 						"status":  http.StatusNotImplemented,
 						"message": err.Error()})
 			} else {
-				if v, ok := data.(*User); ok && v.UserName == "admin" && v.JTI == currentJTI {
+				if v, ok := data.(*User); ok && v.Email == "admin@admin.com" && v.JTI == currentJTI {
 					return true
 				}
 			}
@@ -164,29 +162,30 @@ connect:
 		log.Fatal("JWT Error:" + err.Error())
 	}
 
-	router.POST("/login", authMiddleware.LoginHandler)
+	anon := router.Group("/api/v1/anon/")
+	{
+		anon.GET("products/", FetchAllProducts)
+		anon.GET("products/:id", FetchSingleProduct)
+		anon.POST("register/", CreateUser)
+	}
 
-	router.NoRoute(authMiddleware.MiddlewareFunc(), func(c *gin.Context) {
-		claims := jwt.ExtractClaims(c)
-		log.Printf("NoRoute claims: %#v\n", claims)
-		c.JSON(404, gin.H{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
-	})
-
-	auth := router.Group("/auth")
-	// Refresh time can be longer than token timeout
-	auth.GET("/refresh_token", authMiddleware.RefreshHandler)
+	auth := router.Group("/api/v1/auth/")
+	{
+		auth.POST("login/", authMiddleware.LoginHandler)
+		auth.GET("refresh_token/", authMiddleware.RefreshHandler)
+		auth.GET("hello/", HelloHandler)
+	}
+	
 	auth.Use(authMiddleware.MiddlewareFunc())
+
+	admin := router.Group("/api/v1/admin/")
 	{
-		auth.GET("/hello", HelloHandler)
+		admin.POST("products/", CreateProduct)
+		admin.PUT("products/:id", UpdateProduct)
+		admin.DELETE("products/:id", DeleteProduct)
 	}
 
-	v1 := router.Group("/api/v1/")
-	{
-		v1.POST("products/", CreateProduct)
-		v1.GET("products/", FetchAllProducts)
-		v1.GET("products/:id", FetchSingleProduct)
-		v1.PUT("products/:id", UpdateProduct)
-		v1.DELETE("products/:id", DeleteProduct)
-	}
+	admin.Use(authMiddleware.MiddlewareFunc())
+
 	router.Run()
 }

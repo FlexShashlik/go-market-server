@@ -1,11 +1,12 @@
 package main
 
 import (
-	"strconv"
 	"net/http"
-	"github.com/google/logger"
+	"strconv"
+
+	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
-	"github.com/appleboy/gin-jwt"
+	"github.com/google/logger"
 )
 
 // UploadImage loads image from post request to memory
@@ -35,14 +36,18 @@ func UploadImage(product *Product, c *gin.Context) {
 
 /* Handlers */
 
+// HelloHandler demo
 func HelloHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
-	user, _ := c.Get(identityKey)
 	c.JSON(200, gin.H{
-		"userID":   claims["id"],
-		"userName": user.(*User).UserName,
-		"text":     "Hello World.",
+		"id": claims["id"],
+		"text":   "Hello World.",
 	})
+}
+
+// CreateUser registers new user
+func CreateUser(c *gin.Context) {
+	// Implement this shit
 }
 
 // CreateProduct creates new product

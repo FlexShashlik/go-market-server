@@ -1,17 +1,19 @@
 package main
 
-// Login struct
 type Login struct {
-	Username string `form:"username" json:"username" binding:"required"`
-	Password string `form:"password" json:"password" binding:"required"`
+	Email     string `form:"email" json:"email" binding:"required"`
+	Password  string `form:"password" json:"password" binding:"required"`
 }
 
 // User demo struct
 type User struct {
-	UserName  string
-	FirstName string
-	LastName  string
-	JTI       string
+	ID        int64  `json:"id"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Role      string `json:"role"`
+	JTI       string `json:"jti"`
 }
 
 // Product demo struct
