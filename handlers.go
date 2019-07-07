@@ -1,8 +1,11 @@
 package main
 
 import (
+	"crypto/sha1"
 	"net/http"
 	"strconv"
+
+	"golang.org/x/crypto/pbkdf2"
 
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
@@ -40,14 +43,63 @@ func UploadImage(product *Product, c *gin.Context) {
 func HelloHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 	c.JSON(200, gin.H{
-		"id": claims["id"],
-		"text":   "Hello World.",
+		"id":   claims["id"],
+		"text": "Hello World.",
 	})
 }
 
 // CreateUser registers new user
 func CreateUser(c *gin.Context) {
-	// Implement this shit
+	// TODO: check if user exists
+	var signUp SignUp
+	var user User
+	if err := c.ShouldBind(&signUp); err != nil {
+		logger.Errorf("[CreateUser] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	}
+	user.Email = signUp.Email
+	user.FirstName = signUp.FirstName
+	user.LastName = signUp.LastName
+
+	user.Salt, _ = GenerateRandomString(20)
+	user.Hash = pbkdf2.Key([]byte(signUp.Password), []byte(user.Salt), 4096, 256, sha1.New)
+
+	result, err := db.Exec(
+		"insert into users (email, hash, salt, first_name, last_name) values (?, ?, ?, ?, ?)",
+		user.Email,
+		user.Hash,
+		user.Salt,
+		user.FirstName,
+		user.LastName,
+	)
+
+	if err != nil {
+		logger.Errorf("[DB Query : CreateUser] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error()})
+	} else {
+		user.ID, err = result.LastInsertId()
+		if err != nil {
+			logger.Errorf("[DB Query : CreateUser : LastInsertID] %v; ", err)
+			c.JSON(
+				http.StatusNotImplemented,
+				gin.H{
+					"status":  http.StatusNotImplemented,
+					"message": err.Error(),
+				})
+		} else {
+			logger.Infof("User [%v] created", user)
+			c.JSON(http.StatusCreated, gin.H{"userID": user.ID})
+		}
+	}
 }
 
 // CreateProduct creates new product
@@ -70,7 +122,8 @@ func CreateProduct(c *gin.Context) {
 			http.StatusNotImplemented,
 			gin.H{
 				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
+				"message": err.Error(),
+			})
 	} else {
 		product.ID, err = result.LastInsertId()
 		if err != nil {
@@ -79,7 +132,8 @@ func CreateProduct(c *gin.Context) {
 				http.StatusNotImplemented,
 				gin.H{
 					"status":  http.StatusNotImplemented,
-					"message": err.Error()})
+					"message": err.Error(),
+				})
 		} else {
 			UploadImage(&product, c)
 
@@ -100,7 +154,8 @@ func FetchAllProducts(c *gin.Context) {
 			http.StatusNotImplemented,
 			gin.H{
 				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
+				"message": err.Error(),
+			})
 	} else {
 		for rows.Next() {
 			p := Product{}
@@ -132,7 +187,8 @@ func FetchSingleProduct(c *gin.Context) {
 			http.StatusNotImplemented,
 			gin.H{
 				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
+				"message": err.Error(),
+			})
 	} else {
 		logger.Infof("Product %v fetched", productID)
 		c.JSON(http.StatusOK, product)
@@ -153,7 +209,8 @@ func UpdateProduct(c *gin.Context) {
 		product.Name,
 		product.Price,
 		product.ImageExtension,
-		product.ID)
+		product.ID,
+	)
 
 	if err != nil {
 		logger.Errorf("[DB Query : UpdateProduct] %v; product = %v", err, product)
@@ -161,16 +218,23 @@ func UpdateProduct(c *gin.Context) {
 			http.StatusNotImplemented,
 			gin.H{
 				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
+				"message": err.Error(),
+			})
 	} else {
 		UploadImage(&product, c)
 
-		logger.Infof("Product %v updated to name = %v, price = %v, image_extension = %v", product.ID, product.Name, product.Price, product.ImageExtension)
+		logger.Infof("Product %v updated to name = %v, price = %v, image_extension = %v",
+			product.ID,
+			product.Name,
+			product.Price,
+			product.ImageExtension,
+		)
 		c.JSON(
 			http.StatusOK,
 			gin.H{
 				"status":  http.StatusOK,
-				"message": "Product updated successfully!"})
+				"message": "Product updated successfully!",
+			})
 	}
 }
 
@@ -186,13 +250,15 @@ func DeleteProduct(c *gin.Context) {
 			http.StatusNotImplemented,
 			gin.H{
 				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
+				"message": err.Error(),
+			})
 	} else {
 		logger.Infof("Product %v deleted", productID)
 		c.JSON(
 			http.StatusOK,
 			gin.H{
 				"status":  http.StatusOK,
-				"message": "Product deleted successfully!"})
+				"message": "Product deleted successfully!",
+			})
 	}
 }

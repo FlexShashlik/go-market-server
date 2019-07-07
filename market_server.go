@@ -70,7 +70,7 @@ connect:
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*User); ok {
 				jti, _ := GenerateRandomString(10)
-				
+
 				logger.Infof("User = %v", v)
 
 				_, err = db.Exec("update users set jti = ? where id = ?", jti, 1)
@@ -91,20 +91,23 @@ connect:
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
 			return &User{
-				ID: claims["id"].(int64),
+				ID:  claims["id"].(int64),
 				JTI: claims["jti"].(string),
 			}
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			var login Login
 			if err := c.ShouldBind(&login); err != nil {
+				logger.Errorf("[Login] %v", err)
 				return "", jwt.ErrMissingLoginValues
 			}
 
-			logger.Infof("User == %v", login)
+			logger.Infof("[Login attempt] = %v", login.Email)
 
-			if (login.Email == "admin@admin.com") {
-				return &User{//todo ID set from db
+			//password := pbkdf2.Key([]byte(login.Password), []byte("salt"), 4096, 256, sha1.New)
+
+			if login.Email == "admin@admin.com" {
+				return &User{ //todo ID set from db
 					LastName:  "Flexyan",
 					FirstName: "Sevada",
 				}, nil
@@ -124,7 +127,8 @@ connect:
 					http.StatusNotImplemented,
 					gin.H{
 						"status":  http.StatusNotImplemented,
-						"message": err.Error()})
+						"message": err.Error(),
+					})
 			} else {
 				if v, ok := data.(*User); ok && v.Email == "admin@admin.com" && v.JTI == currentJTI {
 					return true
@@ -162,11 +166,11 @@ connect:
 		log.Fatal("JWT Error:" + err.Error())
 	}
 
-	anon := router.Group("/api/v1/anon/")
+	anon := router.Group("/api/v1/")
 	{
 		anon.GET("products/", FetchAllProducts)
 		anon.GET("products/:id", FetchSingleProduct)
-		anon.POST("register/", CreateUser)
+		anon.POST("sign_up/", CreateUser)
 	}
 
 	auth := router.Group("/api/v1/auth/")
@@ -175,7 +179,7 @@ connect:
 		auth.GET("refresh_token/", authMiddleware.RefreshHandler)
 		auth.GET("hello/", HelloHandler)
 	}
-	
+
 	auth.Use(authMiddleware.MiddlewareFunc())
 
 	admin := router.Group("/api/v1/admin/")
