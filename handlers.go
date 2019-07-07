@@ -12,33 +12,6 @@ import (
 	"github.com/google/logger"
 )
 
-// UploadImage loads image from post request to memory
-func UploadImage(product *Product, c *gin.Context) {
-	file, err := c.FormFile("image")
-	if err != nil {
-		logger.Errorf("[DB Query : CreateProduct : FormFile()] %v", err)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
-		return
-	}
-
-	filename := "images/" + strconv.FormatInt(product.ID, 10) + "." + product.ImageExtension
-	if err := c.SaveUploadedFile(file, filename); err != nil {
-		logger.Errorf("[DB Query : CreateProduct : SaveUploadedFile()] %v", err)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
-		return
-	}
-}
-
-/* Handlers */
-
 // HelloHandler demo
 func HelloHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)

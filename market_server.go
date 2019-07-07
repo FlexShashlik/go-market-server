@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"crypto/sha1"
 	"database/sql"
 	"flag"
 	"io"
@@ -8,6 +10,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"golang.org/x/crypto/pbkdf2"
 
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
@@ -73,12 +77,12 @@ connect:
 
 				logger.Infof("User = %v", v)
 
-				_, err = db.Exec("update users set jti = ? where id = ?", jti, 1)
+				_, err = db.Exec("update users set jti = ? where id = ?", jti, v.ID)
 
 				if err != nil {
 					logger.Errorf("[DB Query : SetJTI] %v; jti = %v", err, jti)
 				}
-				//fetch v.ID value from db
+
 				return jwt.MapClaims{
 					"id": v.ID,
 					// The "jti" (JWT ID) claim provides a unique identifier for the JWT.
@@ -86,6 +90,7 @@ connect:
 					"jti": jti,
 				}
 			}
+			logger.Infof("What&&&")
 			return jwt.MapClaims{}
 		},
 		IdentityHandler: func(c *gin.Context) interface{} {
@@ -104,21 +109,22 @@ connect:
 
 			logger.Infof("[Login attempt] = %v", login.Email)
 
-			//password := pbkdf2.Key([]byte(login.Password), []byte("salt"), 4096, 256, sha1.New)
+			user, err := FetchUser(login.Email)
 
-			if login.Email == "admin@admin.com" {
-				return &User{ //todo ID set from db
-					LastName:  "Flexyan",
-					FirstName: "Sevada",
-				}, nil
+			hash := pbkdf2.Key([]byte(login.Password), []byte(user.Salt), 4096, 256, sha1.New)
+
+			if bytes.Equal(hash, user.Hash) && err == nil {
+				return user, nil
 			}
+
+			logger.Infof("[Auth : Wrong Credentials]")
 
 			return nil, jwt.ErrFailedAuthentication
 		},
 		Authorizator: func(data interface{}, c *gin.Context) bool {
 			var currentJTI string
 
-			row := db.QueryRow("select jti from users where id = ?", 1)
+			row := db.QueryRow("select jti from users where id = ?", data.(*User).ID)
 			err := row.Scan(&currentJTI)
 
 			if err != nil {
@@ -130,7 +136,7 @@ connect:
 						"message": err.Error(),
 					})
 			} else {
-				if v, ok := data.(*User); ok && v.Email == "admin@admin.com" && v.JTI == currentJTI {
+				if v, ok := data.(*User); ok && v.Email == "test@test.com" && v.JTI == currentJTI {
 					return true
 				}
 			}
