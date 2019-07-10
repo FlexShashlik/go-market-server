@@ -90,7 +90,6 @@ connect:
 					"jti": jti,
 				}
 			}
-			logger.Infof("What&&&")
 			return jwt.MapClaims{}
 		},
 		IdentityHandler: func(c *gin.Context) interface{} {
