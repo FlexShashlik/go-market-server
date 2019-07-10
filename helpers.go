@@ -39,8 +39,8 @@ func UploadImage(product *Product, c *gin.Context) {
 func FetchUserByEmail(email string) (*User, error) {
 	var user User
 
-	row := db.QueryRow("select id, email, hash, salt, first_name, last_name, role, jti from users where email = ?", email)
-	err := row.Scan(&user.ID, &user.Email, &user.Hash, &user.Salt, &user.FirstName, &user.LastName, &user.Role, &user.JTI)
+	row := db.QueryRow("select id, email, hash, salt, first_name, last_name, role from users where email = ?", email)
+	err := row.Scan(&user.ID, &user.Email, &user.Hash, &user.Salt, &user.FirstName, &user.LastName, &user.Role)
 
 	if err != nil {
 		return nil, err
