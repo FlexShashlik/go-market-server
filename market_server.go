@@ -68,34 +68,31 @@ connect:
 		Realm:            "Flex Market",
 		PrivKeyFile:      "jwtRS256.key",
 		PubKeyFile:       "jwtRS256pub.key",
-		SigningAlgorithm: "RS256",
+		SigningAlgorithm: "RS512",
 		Timeout:          time.Hour,
 		MaxRefresh:       time.Hour,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			if v, ok := data.(*User); ok {
-				jti, _ := GenerateRandomString(10)
+			jti, _ := GenerateRandomString(10)
 
-				logger.Infof("User = %v", v)
+			logger.Infof("User = %v", data.(*User))
 
-				_, err = db.Exec("update users set jti = ? where id = ?", jti, v.ID)
+			_, err = db.Exec("update users set jti = ? where id = ?", jti, data.(*User).ID)
 
-				if err != nil {
-					logger.Errorf("[DB Query : SetJTI] %v; jti = %v", err, jti)
-				}
-
-				return jwt.MapClaims{
-					"id": v.ID,
-					// The "jti" (JWT ID) claim provides a unique identifier for the JWT.
-					// https://tools.ietf.org/html/rfc7519#section-4.1.7
-					"jti": jti,
-				}
+			if err != nil {
+				logger.Errorf("[DB Query : SetJTI] %v; jti = %v", err, jti)
 			}
-			return jwt.MapClaims{}
+
+			return jwt.MapClaims{
+				"id": data.(*User).ID,
+				// The "jti" (JWT ID) claim provides a unique identifier for the JWT.
+				// https://tools.ietf.org/html/rfc7519#section-4.1.7
+				"jti": jti,
+			}
 		},
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
 			return &User{
-				ID:  claims["id"].(int64),
+				ID:  int64(claims["id"].(float64)),
 				JTI: claims["jti"].(string),
 			}
 		},
@@ -108,7 +105,7 @@ connect:
 
 			logger.Infof("[Login attempt] = %v", login.Email)
 
-			user, err := FetchUser(login.Email)
+			user, err := FetchUserByEmail(login.Email)
 
 			hash := pbkdf2.Key([]byte(login.Password), []byte(user.Salt), 4096, 256, sha1.New)
 
@@ -121,13 +118,10 @@ connect:
 			return nil, jwt.ErrFailedAuthentication
 		},
 		Authorizator: func(data interface{}, c *gin.Context) bool {
-			var currentJTI string
-
-			row := db.QueryRow("select jti from users where id = ?", data.(*User).ID)
-			err := row.Scan(&currentJTI)
+			user, err := FetchUserByID(data.(*User).ID)
 
 			if err != nil {
-				logger.Errorf("[DB Query : FetchJTI : row.Scan] %v; jti = %v", err, currentJTI)
+				logger.Errorf("[DB Query : FetchUserByID : row.Scan] %v; id = %v", err, data.(*User).ID)
 				c.JSON(
 					http.StatusNotImplemented,
 					gin.H{
@@ -135,11 +129,12 @@ connect:
 						"message": err.Error(),
 					})
 			} else {
-				if v, ok := data.(*User); ok && v.Email == "test@test.com" && v.JTI == currentJTI {
+				if user.Role == "admin" && user.JTI == data.(*User).JTI {
+					logger.Infof("Access granted for user [%v]", user.ID)
 					return true
 				}
 			}
-
+			logger.Infof("Access denied for user [%v]", user.ID)
 			return false
 		},
 		Unauthorized: func(c *gin.Context, code int, message string) {
@@ -148,21 +143,9 @@ connect:
 				"message": message,
 			})
 		},
-		// TokenLookup is a string in the form of "<source>:<name>" that is used
-		// to extract token from the request.
-		// Optional. Default value "header:Authorization".
-		// Possible values:
-		// - "header:<name>"
-		// - "query:<name>"
-		// - "cookie:<name>"
-		// - "param:<name>"
 		TokenLookup: "header: Authorization, query: token, cookie: jwt",
-		// TokenLookup: "query:token",
-		// TokenLookup: "cookie:token",
-
 		// TokenHeadName is a string in the header. Default value is "Bearer"
 		TokenHeadName: "Bearer",
-
 		// TimeFunc provides the current time. You can override it to use another time value. This is useful for testing or if your server uses a different time zone than your tokens.
 		TimeFunc: time.Now,
 	})
@@ -182,10 +165,12 @@ connect:
 	{
 		auth.POST("login/", authMiddleware.LoginHandler)
 		auth.GET("refresh_token/", authMiddleware.RefreshHandler)
-		auth.GET("hello/", HelloHandler)
 	}
 
 	auth.Use(authMiddleware.MiddlewareFunc())
+	{
+		auth.GET("hello/", HelloHandler)
+	}
 
 	admin := router.Group("/api/v1/admin/")
 	{

@@ -35,19 +35,33 @@ func UploadImage(product *Product, c *gin.Context) {
 	}
 }
 
-// FetchUser fetches user info
-func FetchUser(email string) (*User, error) {
+// FetchUserByEmail fetches user info by email
+func FetchUserByEmail(email string) (*User, error) {
 	var user User
 
-	row := db.QueryRow("select id, email, hash, salt, first_name, last_name, role from users where email = ?", email)
-	err := row.Scan(&user.ID, &user.Email, &user.Hash, &user.Salt, &user.FirstName, &user.LastName, &user.Role)
+	row := db.QueryRow("select id, email, hash, salt, first_name, last_name, role, jti from users where email = ?", email)
+	err := row.Scan(&user.ID, &user.Email, &user.Hash, &user.Salt, &user.FirstName, &user.LastName, &user.Role, &user.JTI)
 
 	if err != nil {
-		logger.Errorf("[DB Query : FetchUser : row.Scan] %v; email = %v", err, email)
 		return nil, err
 	}
 
 	logger.Infof("User %v fetched", email)
+	return &user, nil
+}
+
+// FetchUserByID fetches user info by id
+func FetchUserByID(id int64) (*User, error) {
+	var user User
+
+	row := db.QueryRow("select id, email, hash, salt, first_name, last_name, role, jti from users where id = ?", id)
+	err := row.Scan(&user.ID, &user.Email, &user.Hash, &user.Salt, &user.FirstName, &user.LastName, &user.Role, &user.JTI)
+
+	if err != nil {
+		return nil, err
+	}
+
+	logger.Infof("User %v fetched", id)
 	return &user, nil
 }
 

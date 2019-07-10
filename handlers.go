@@ -17,6 +17,7 @@ func HelloHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 	c.JSON(200, gin.H{
 		"id":   claims["id"],
+		"jti": claims["jti"],
 		"text": "Hello World.",
 	})
 }
@@ -41,7 +42,7 @@ func CreateUser(c *gin.Context) {
 		user.Email = signUp.Email
 
 		// Check if user with this email already exists
-		_, err := FetchUser(user.Email)
+		_, err := FetchUserByEmail(user.Email)
 		if err == nil {
 			// User already exists
 			logger.Error("[DB Query : CreateUser] User alredy exists!")
