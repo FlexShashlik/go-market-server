@@ -2,7 +2,9 @@ package main
 
 import (
 	"net/http"
+	"regexp"
 	"strconv"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/logger"
@@ -47,4 +49,34 @@ func FetchUser(email string) (*User, error) {
 
 	logger.Infof("User %v fetched", email)
 	return &user, nil
+}
+
+// IsSignUpDataValid checks data valid or not
+func IsSignUpDataValid(data SignUp) bool {
+	var firstName, lastName, email, password bool
+
+	isEmailValid := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+
+	var number, upper, lower bool
+	letters := 0
+	for _, c := range data.Password {
+		switch {
+		case unicode.IsNumber(c):
+			number = true
+			letters++
+		case unicode.IsUpper(c):
+			upper = true
+			letters++
+		case unicode.IsLower(c):
+			lower = true
+			letters++
+		}
+	}
+
+	firstName = len(data.FirstName) > 0
+	lastName = len(data.LastName) > 0
+	email = isEmailValid.MatchString(data.Email)
+	password = number && upper && lower && letters >= 6
+
+	return firstName && lastName && email && password
 }

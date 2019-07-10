@@ -36,47 +36,39 @@ func CreateUser(c *gin.Context) {
 				"message": err.Error(),
 			})
 	}
-	user.Email = signUp.Email
 
-	// Check if user with this email already exists	
-	_, err := FetchUser(user.Email)
-	if err == nil{
-		// User already exists
-		logger.Error("[DB Query : CreateUser] User alredy exists!")
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": "User with this email already exists!",
-			})
-	} else {
-		user.FirstName = signUp.FirstName
-		user.LastName = signUp.LastName
+	if IsSignUpDataValid(signUp) {
+		user.Email = signUp.Email
 
-		user.Salt, _ = GenerateRandomString(20)
-		user.Hash = pbkdf2.Key([]byte(signUp.Password), []byte(user.Salt), 4096, 256, sha1.New)
-
-		result, err := db.Exec(
-			"insert into users (email, hash, salt, first_name, last_name) values (?, ?, ?, ?, ?)",
-			user.Email,
-			user.Hash,
-			user.Salt,
-			user.FirstName,
-			user.LastName,
-		)
-
-		if err != nil {
-			logger.Errorf("[DB Query : CreateUser] %v", err)
+		// Check if user with this email already exists
+		_, err := FetchUser(user.Email)
+		if err == nil {
+			// User already exists
+			logger.Error("[DB Query : CreateUser] User alredy exists!")
 			c.JSON(
 				http.StatusNotImplemented,
 				gin.H{
 					"status":  http.StatusNotImplemented,
-					"message": err.Error(),
+					"message": "User with this email already exists!",
 				})
 		} else {
-			user.ID, err = result.LastInsertId()
+			user.FirstName = signUp.FirstName
+			user.LastName = signUp.LastName
+
+			user.Salt, _ = GenerateRandomString(20)
+			user.Hash = pbkdf2.Key([]byte(signUp.Password), []byte(user.Salt), 4096, 256, sha1.New)
+
+			result, err := db.Exec(
+				"insert into users (email, hash, salt, first_name, last_name) values (?, ?, ?, ?, ?)",
+				user.Email,
+				user.Hash,
+				user.Salt,
+				user.FirstName,
+				user.LastName,
+			)
+
 			if err != nil {
-				logger.Errorf("[DB Query : CreateUser : LastInsertID] %v; ", err)
+				logger.Errorf("[DB Query : CreateUser] %v", err)
 				c.JSON(
 					http.StatusNotImplemented,
 					gin.H{
@@ -84,10 +76,29 @@ func CreateUser(c *gin.Context) {
 						"message": err.Error(),
 					})
 			} else {
-				logger.Infof("User [%v] created", user)
-				c.JSON(http.StatusCreated, gin.H{"userID": user.ID})
+				user.ID, err = result.LastInsertId()
+				if err != nil {
+					logger.Errorf("[DB Query : CreateUser : LastInsertID] %v; ", err)
+					c.JSON(
+						http.StatusNotImplemented,
+						gin.H{
+							"status":  http.StatusNotImplemented,
+							"message": err.Error(),
+						})
+				} else {
+					logger.Infof("User [%v] created", user)
+					c.JSON(http.StatusCreated, gin.H{"userID": user.ID})
+				}
 			}
 		}
+	} else {
+		logger.Error("[CreateUser] sign up data is invalid!")
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": "Sign up data is invalid!",
+			})
 	}
 }
 
