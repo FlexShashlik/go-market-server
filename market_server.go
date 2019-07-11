@@ -98,23 +98,24 @@ connect:
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			var login Login
+			
 			if err := c.ShouldBind(&login); err != nil {
 				logger.Errorf("[Login] %v", err)
 				return "", jwt.ErrMissingLoginValues
 			}
 
 			logger.Infof("[Login attempt] = %v", login.Email)
-
 			user, err := FetchUserByEmail(login.Email)
 
-			hash := pbkdf2.Key([]byte(login.Password), []byte(user.Salt), 4096, 256, sha1.New)
+			if err == nil {
+				hash := pbkdf2.Key([]byte(login.Password), []byte(user.Salt), 4096, 256, sha1.New)
 
-			if bytes.Equal(hash, user.Hash) && err == nil {
-				return user, nil
+				if bytes.Equal(hash, user.Hash) {
+					return user, nil
+				}
 			}
 
 			logger.Infof("[Auth : Wrong Credentials]")
-
 			return nil, jwt.ErrFailedAuthentication
 		},
 		Authorizator: func(data interface{}, c *gin.Context) bool {
@@ -165,12 +166,10 @@ connect:
 	{
 		auth.POST("login/", authMiddleware.LoginHandler)
 		auth.GET("refresh_token/", authMiddleware.RefreshHandler)
+		auth.GET("hello/", HelloHandler)
 	}
 
 	auth.Use(authMiddleware.MiddlewareFunc())
-	{
-		auth.GET("hello/", HelloHandler)
-	}
 
 	admin := router.Group("/api/v1/admin/")
 	{
