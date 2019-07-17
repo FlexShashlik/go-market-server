@@ -17,7 +17,7 @@ func HelloHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
 	c.JSON(200, gin.H{
 		"id":   claims["id"],
-		"jti": claims["jti"],
+		"jti":  claims["jti"],
 		"text": "Hello World.",
 	})
 }
@@ -105,9 +105,10 @@ func CreateUser(c *gin.Context) {
 
 // CreateProduct creates new product
 func CreateProduct(c *gin.Context) {
+	price, _ := strconv.ParseInt(c.PostForm("price"), 10, 64)
 	product := Product{
 		Name:           c.PostForm("name"),
-		Price:          c.PostForm("price"),
+		Price:          price,
 		ImageExtension: c.PostForm("image_extension"),
 	}
 
@@ -202,7 +203,7 @@ func UpdateProduct(c *gin.Context) {
 
 	product.ID, _ = strconv.ParseInt(c.Param("id"), 10, 64)
 	product.Name = c.PostForm("name")
-	product.Price = c.PostForm("price")
+	product.Price, _ = strconv.ParseInt(c.PostForm("price"), 10, 64)
 	product.ImageExtension = c.PostForm("image_extension")
 
 	_, err := db.Exec(

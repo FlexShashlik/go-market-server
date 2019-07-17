@@ -30,6 +30,6 @@ type User struct {
 type Product struct {
 	ID             int64  `json:"id"`
 	Name           string `json:"name"`
-	Price          string `json:"price"`
+	Price          int64  `json:"price"`
 	ImageExtension string `json:"image_extension"`
 }

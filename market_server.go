@@ -39,7 +39,7 @@ func main() {
 	// Connect to the DB:
 connect:
 
-	db, err = sql.Open("mysql", "Sevada:LAliMDVIG24\\#@tcp(127.0.0.1:3306)/market")
+	db, err = sql.Open("mysql", "admin:veryStrongnt@tcp(192.168.1.162:3306)/market")
 	if err != nil {
 		logger.Errorf("Connect to the DB failed: %v", err)
 		logger.Info("Tryna do it one more time...")
@@ -66,8 +66,8 @@ connect:
 
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:            "Flex Market",
-		PrivKeyFile:      "jwtRS256.key",
-		PubKeyFile:       "jwtRS256pub.key",
+		PrivKeyFile:      "jwt.key",
+		PubKeyFile:       "jwt_pub.key",
 		SigningAlgorithm: "RS512",
 		Timeout:          time.Hour,
 		MaxRefresh:       time.Hour,
