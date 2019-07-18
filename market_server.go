@@ -158,6 +158,7 @@ connect:
 	anon := router.Group("/api/v1/")
 	{
 		anon.GET("catalog/", FetchCatalog)
+		anon.GET("sub_catalog/", FetchSubCatalog)
 		anon.GET("products/", FetchAllProducts)
 		anon.GET("products/:id", FetchSingleProduct)
 		anon.POST("sign_up/", CreateUser)

@@ -47,8 +47,38 @@ func FetchCatalog(c *gin.Context) {
 			}
 			catalog = append(catalog, c)
 		}
-		logger.Infof("Products fetched")
+		logger.Infof("Catalog fetched")
 		c.JSON(http.StatusOK, catalog)
+	}
+}
+
+// FetchSubCatalog fetches sub_catalog
+func FetchSubCatalog(c *gin.Context) {
+	var subCatalog []SubCatalog
+
+	rows, err := db.Query("select id, name, catalog_id from sub_catalog")
+	if err != nil {
+		logger.Errorf("[DB Query : FetchSubCatalog] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		for rows.Next() {
+			sc := SubCatalog{}
+
+			err := rows.Scan(&sc.ID, &sc.Name)
+
+			if err != nil {
+				logger.Errorf("[DB Query : FetchSubCatalog : rows.Scan] %v", err)
+				continue
+			}
+			subCatalog = append(subCatalog, sc)
+		}
+		logger.Infof("SubCatalog fetched")
+		c.JSON(http.StatusOK, subCatalog)
 	}
 }
 
