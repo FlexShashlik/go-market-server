@@ -69,7 +69,7 @@ func FetchSubCatalog(c *gin.Context) {
 		for rows.Next() {
 			sc := SubCatalog{}
 
-			err := rows.Scan(&sc.ID, &sc.Name)
+			err := rows.Scan(&sc.ID, &sc.Name, &sc.CatalogID)
 
 			if err != nil {
 				logger.Errorf("[DB Query : FetchSubCatalog : rows.Scan] %v", err)
