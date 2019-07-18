@@ -22,6 +22,36 @@ func HelloHandler(c *gin.Context) {
 	})
 }
 
+// FetchCatalog fetches catalog
+func FetchCatalog(c *gin.Context) {
+	var products []Product
+
+	rows, err := db.Query("select id, name, price, image_extension from products")
+	if err != nil {
+		logger.Errorf("[DB Query : FetchAllProducts] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		for rows.Next() {
+			p := Product{}
+
+			err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageExtension)
+
+			if err != nil {
+				logger.Errorf("[DB Query : FetchAllProducts : rows.Scan] %v", err)
+				continue
+			}
+			products = append(products, p)
+		}
+		logger.Infof("Products fetched")
+		c.JSON(http.StatusOK, products)
+	}
+}
+
 // CreateUser registers new user
 func CreateUser(c *gin.Context) {
 	logger.Info("[CreateUser] attempt to create new user")
@@ -105,18 +135,23 @@ func CreateUser(c *gin.Context) {
 
 // CreateProduct creates new product
 func CreateProduct(c *gin.Context) {
-	price, _ := strconv.ParseInt(c.PostForm("price"), 10, 64)
-	product := Product{
-		Name:           c.PostForm("name"),
-		Price:          price,
-		ImageExtension: c.PostForm("image_extension"),
+	var product Product
+	if err := c.ShouldBind(&product); err != nil {
+		logger.Errorf("[CreateProduct] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
 	}
 
 	result, err := db.Exec(
-		"insert into products (name, price, image_extension) values (?, ?, ?)",
+		"insert into products (name, price, image_extension, sub_catalog_id) values (?, ?, ?, ?)",
 		product.Name,
 		product.Price,
-		product.ImageExtension)
+		product.ImageExtension,
+		product.SubCatalogID)
 
 	if err != nil {
 		logger.Errorf("[DB Query : CreateProduct] %v", err)

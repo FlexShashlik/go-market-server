@@ -32,4 +32,5 @@ type Product struct {
 	Name           string `json:"name"`
 	Price          int64  `json:"price"`
 	ImageExtension string `json:"image_extension"`
+	SubCatalogID   string `json:"sub_catalog_id"`
 }
