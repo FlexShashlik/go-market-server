@@ -98,7 +98,7 @@ connect:
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			var login Login
-			
+
 			if err := c.ShouldBind(&login); err != nil {
 				logger.Errorf("[Login] %v", err)
 				return "", jwt.ErrMissingLoginValues
@@ -167,19 +167,19 @@ connect:
 	{
 		auth.POST("login/", authMiddleware.LoginHandler)
 		auth.GET("refresh_token/", authMiddleware.RefreshHandler)
-		auth.GET("hello/", HelloHandler)
 	}
 
 	auth.Use(authMiddleware.MiddlewareFunc())
+	{
+		auth.GET("hello/", HelloHandler)
+	}
 
-	admin := router.Group("/api/v1/admin/")
+	admin := router.Group("/api/v1/admin/").Use(authMiddleware.MiddlewareFunc())
 	{
 		admin.POST("products/", CreateProduct)
 		admin.PUT("products/:id", UpdateProduct)
 		admin.DELETE("products/:id", DeleteProduct)
 	}
-
-	admin.Use(authMiddleware.MiddlewareFunc())
 
 	router.Run()
 }
