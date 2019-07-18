@@ -24,11 +24,11 @@ func HelloHandler(c *gin.Context) {
 
 // FetchCatalog fetches catalog
 func FetchCatalog(c *gin.Context) {
-	var products []Product
+	var catalog []Catalog
 
-	rows, err := db.Query("select id, name, price, image_extension from products")
+	rows, err := db.Query("select id, name from catalog")
 	if err != nil {
-		logger.Errorf("[DB Query : FetchAllProducts] %v", err)
+		logger.Errorf("[DB Query : FetchCatalog] %v", err)
 		c.JSON(
 			http.StatusNotImplemented,
 			gin.H{
@@ -37,18 +37,18 @@ func FetchCatalog(c *gin.Context) {
 			})
 	} else {
 		for rows.Next() {
-			p := Product{}
+			c := Catalog{}
 
-			err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageExtension)
+			err := rows.Scan(&c.ID, &c.Name)
 
 			if err != nil {
-				logger.Errorf("[DB Query : FetchAllProducts : rows.Scan] %v", err)
+				logger.Errorf("[DB Query : FetchCatalog : rows.Scan] %v", err)
 				continue
 			}
-			products = append(products, p)
+			catalog = append(catalog, c)
 		}
 		logger.Infof("Products fetched")
-		c.JSON(http.StatusOK, products)
+		c.JSON(http.StatusOK, catalog)
 	}
 }
 

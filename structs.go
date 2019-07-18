@@ -34,3 +34,16 @@ type Product struct {
 	ImageExtension string `json:"image_extension"`
 	SubCatalogID   string `json:"sub_catalog_id"`
 }
+
+// Catalog demo struct
+type Catalog struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+// SubCatalog demo struct
+type SubCatalog struct {
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	CatalogID int64  `json:"catalog_id"`
+}
