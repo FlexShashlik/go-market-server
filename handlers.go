@@ -135,17 +135,13 @@ func CreateUser(c *gin.Context) {
 
 // CreateProduct creates new product
 func CreateProduct(c *gin.Context) {
-	var product Product
-	if err := c.ShouldBind(&product); err != nil {
-		logger.Errorf("[CreateProduct] %v", err)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error(),
-			})
+	price, _ := strconv.ParseInt(c.PostForm("price"), 10, 64)
+	product := Product{
+		Name:           c.PostForm("name"),
+		Price:          price,
+		ImageExtension: c.PostForm("image_extension"),
+		SubCatalogID:   c.PostForm("sub_catalog_id"),
 	}
-
 	result, err := db.Exec(
 		"insert into products (name, price, image_extension, sub_catalog_id) values (?, ?, ?, ?)",
 		product.Name,
