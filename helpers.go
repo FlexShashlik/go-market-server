@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -24,8 +23,7 @@ func UploadImage(product *Product, c *gin.Context) {
 		return
 	}
 
-	_ = os.Mkdir("images", os.ModePerm)
-	filename := "images/" + strconv.FormatInt(product.ID, 10) + "." + product.ImageExtension
+	filename := "/var/www/images/" + strconv.FormatInt(product.ID, 10) + "." + product.ImageExtension
 	if err := c.SaveUploadedFile(file, filename); err != nil {
 		logger.Errorf("[DB Query : CreateProduct : SaveUploadedFile()] %v", err)
 		c.JSON(
