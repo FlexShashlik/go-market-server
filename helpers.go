@@ -23,7 +23,7 @@ func UploadImage(product *Product, c *gin.Context) {
 		return
 	}
 
-	filename := "/var/www/images/" + strconv.FormatInt(product.ID, 10) + "." + product.ImageExtension
+	filename := "/var/www/html/images/" + strconv.FormatInt(product.ID, 10) + "." + product.ImageExtension
 	if err := c.SaveUploadedFile(file, filename); err != nil {
 		logger.Errorf("[DB Query : CreateProduct : SaveUploadedFile()] %v", err)
 		c.JSON(
