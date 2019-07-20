@@ -164,13 +164,6 @@ func CreateUser(c *gin.Context) {
 
 // CreateProduct creates new product
 func CreateProduct(c *gin.Context) {
-	// product := Product{
-	// 	Name:           c.PostForm("name"),
-	// 	Price:          c.PostForm("price"),
-	// 	ImageExtension: c.PostForm("image_extension"),
-	// 	SubCatalogID:   c.PostForm("sub_catalog_id"),
-	// }
-
 	var product Product
 
 	if err := c.ShouldBind(&product); err != nil {
@@ -271,13 +264,19 @@ func FetchSingleProduct(c *gin.Context) {
 
 // UpdateProduct updates product
 func UpdateProduct(c *gin.Context) {
-	product := Product{}
+	var product Product
+
+	if err := c.ShouldBind(&product); err != nil {
+		logger.Errorf("[CreateProduct] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	}
 
 	product.ID = c.Param("id")
-	product.Name = c.PostForm("name")
-	product.Price = c.PostForm("price")
-	product.ImageExtension = c.PostForm("image_extension")
-	product.SubCatalogID = c.PostForm("sub_catalog_id")
 
 	_, err := db.Exec(
 		"update products SET name = ?, price = ?, image_extension = ? where id = ?",
