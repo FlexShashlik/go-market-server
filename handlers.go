@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha1"
 	"net/http"
-	"strconv"
 
 	"golang.org/x/crypto/pbkdf2"
 
@@ -137,7 +136,7 @@ func CreateUser(c *gin.Context) {
 						"message": err.Error(),
 					})
 			} else {
-				user.ID, err = result.LastInsertId()
+				userID, err := result.LastInsertId()
 				if err != nil {
 					logger.Errorf("[DB Query : CreateUser : LastInsertID] %v; ", err)
 					c.JSON(
@@ -148,7 +147,7 @@ func CreateUser(c *gin.Context) {
 						})
 				} else {
 					logger.Infof("User [%v] created", user)
-					c.JSON(http.StatusCreated, gin.H{"userID": user.ID})
+					c.JSON(http.StatusCreated, gin.H{"userID": userID})
 				}
 			}
 		}
@@ -165,13 +164,25 @@ func CreateUser(c *gin.Context) {
 
 // CreateProduct creates new product
 func CreateProduct(c *gin.Context) {
-	price, _ := strconv.ParseInt(c.PostForm("price"), 10, 64)
-	product := Product{
-		Name:           c.PostForm("name"),
-		Price:          price,
-		ImageExtension: c.PostForm("image_extension"),
-		SubCatalogID:   c.PostForm("sub_catalog_id"),
+	// product := Product{
+	// 	Name:           c.PostForm("name"),
+	// 	Price:          c.PostForm("price"),
+	// 	ImageExtension: c.PostForm("image_extension"),
+	// 	SubCatalogID:   c.PostForm("sub_catalog_id"),
+	// }
+
+	var product Product
+
+	if err := c.ShouldBind(&product); err != nil {
+		logger.Errorf("[CreateProduct] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
 	}
+
 	result, err := db.Exec(
 		"insert into products (name, price, image_extension, sub_catalog_id) values (?, ?, ?, ?)",
 		product.Name,
@@ -188,7 +199,7 @@ func CreateProduct(c *gin.Context) {
 				"message": err.Error(),
 			})
 	} else {
-		product.ID, err = result.LastInsertId()
+		productID, err := result.LastInsertId()
 		if err != nil {
 			logger.Errorf("[DB Query : CreateProduct : LastInsertID] %v; ", err)
 			c.JSON(
@@ -201,7 +212,7 @@ func CreateProduct(c *gin.Context) {
 			UploadImage(&product, c)
 
 			logger.Infof("Product [%v] created", product)
-			c.JSON(http.StatusCreated, gin.H{"productID": product.ID})
+			c.JSON(http.StatusCreated, gin.H{"productID": productID})
 		}
 	}
 }
@@ -210,7 +221,7 @@ func CreateProduct(c *gin.Context) {
 func FetchAllProducts(c *gin.Context) {
 	var products []Product
 
-	rows, err := db.Query("select id, name, price, image_extension from products")
+	rows, err := db.Query("select id, name, price, image_extension, sub_catalog_id from products")
 	if err != nil {
 		logger.Errorf("[DB Query : FetchAllProducts] %v", err)
 		c.JSON(
@@ -223,7 +234,7 @@ func FetchAllProducts(c *gin.Context) {
 		for rows.Next() {
 			p := Product{}
 
-			err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageExtension)
+			err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageExtension, &p.SubCatalogID)
 
 			if err != nil {
 				logger.Errorf("[DB Query : FetchAllProducts : rows.Scan] %v", err)
@@ -241,8 +252,8 @@ func FetchSingleProduct(c *gin.Context) {
 	var product Product
 	productID := c.Param("id")
 
-	row := db.QueryRow("select id, name, price, image_extension from products where id = ?", productID)
-	err := row.Scan(&product.ID, &product.Name, &product.Price, &product.ImageExtension)
+	row := db.QueryRow("select id, name, price, image_extension, sub_catalog_id from products where id = ?", productID)
+	err := row.Scan(&product.ID, &product.Name, &product.Price, &product.ImageExtension, &product.SubCatalogID)
 
 	if err != nil {
 		logger.Errorf("[DB Query : FetchSingleProduct : row.Scan] %v; productID = %v", err, productID)
@@ -262,10 +273,11 @@ func FetchSingleProduct(c *gin.Context) {
 func UpdateProduct(c *gin.Context) {
 	product := Product{}
 
-	product.ID, _ = strconv.ParseInt(c.Param("id"), 10, 64)
+	product.ID = c.Param("id")
 	product.Name = c.PostForm("name")
-	product.Price, _ = strconv.ParseInt(c.PostForm("price"), 10, 64)
+	product.Price = c.PostForm("price")
 	product.ImageExtension = c.PostForm("image_extension")
+	product.SubCatalogID = c.PostForm("sub_catalog_id")
 
 	_, err := db.Exec(
 		"update products SET name = ?, price = ?, image_extension = ? where id = ?",
@@ -303,12 +315,10 @@ func UpdateProduct(c *gin.Context) {
 
 // DeleteProduct deletes product
 func DeleteProduct(c *gin.Context) {
-	productID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-
-	_, err := db.Exec("delete from products where id = ?", productID)
+	_, err := db.Exec("delete from products where id = ?", c.Param("id"))
 
 	if err != nil {
-		logger.Errorf("[DB Query : DeleteProduct] %v; productID = %v", err, productID)
+		logger.Errorf("[DB Query : DeleteProduct] %v; productID = %v", err, c.Param("id"))
 		c.JSON(
 			http.StatusNotImplemented,
 			gin.H{
@@ -316,7 +326,7 @@ func DeleteProduct(c *gin.Context) {
 				"message": err.Error(),
 			})
 	} else {
-		logger.Infof("Product %v deleted", productID)
+		logger.Infof("Product %v deleted", c.Param("id"))
 		c.JSON(
 			http.StatusOK,
 			gin.H{

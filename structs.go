@@ -16,7 +16,7 @@ type SignUp struct {
 
 // User demo struct
 type User struct {
-	ID        int64  `json:"id"`
+	ID        string `json:"id"`
 	Email     string `json:"email"`
 	Hash      []byte `json:"hash"`
 	Salt      string `json:"salt"`
@@ -28,22 +28,22 @@ type User struct {
 
 // Product demo struct
 type Product struct {
-	ID             int64  `json:"id"`
-	Name           string `json:"name"`
-	Price          int64  `json:"price"`
-	ImageExtension string `json:"image_extension"`
-	SubCatalogID   string `json:"sub_catalog_id"`
+	ID             string `form:"id" json:"id"`
+	Name           string `form:"name" json:"name"`
+	Price          string `form:"price" json:"price"`
+	ImageExtension string `form:"image_extension" json:"image_extension"`
+	SubCatalogID   string `form:"sub_catalog_id" json:"sub_catalog_id"`
 }
 
 // Catalog demo struct
 type Catalog struct {
-	ID   int64  `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
 // SubCatalog demo struct
 type SubCatalog struct {
-	ID        int64  `json:"id"`
+	ID        string `json:"id"`
 	Name      string `json:"name"`
-	CatalogID int64  `json:"catalog_id"`
+	CatalogID string `json:"catalog_id"`
 }

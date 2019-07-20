@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"regexp"
-	"strconv"
 	"unicode"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +22,7 @@ func UploadImage(product *Product, c *gin.Context) {
 		return
 	}
 
-	filename := "/var/www/html/images/" + strconv.FormatInt(product.ID, 10) + "." + product.ImageExtension
+	filename := "/var/www/html/images/" + product.ID + "." + product.ImageExtension
 	if err := c.SaveUploadedFile(file, filename); err != nil {
 		logger.Errorf("[DB Query : CreateProduct : SaveUploadedFile()] %v", err)
 		c.JSON(
@@ -46,12 +45,12 @@ func FetchUserByEmail(email string) (*User, error) {
 		return nil, err
 	}
 
-	logger.Infof("User %v fetched", email)
+	logger.Infof("User [%v] fetched", email)
 	return &user, nil
 }
 
 // FetchUserByID fetches user info by id
-func FetchUserByID(id int64) (*User, error) {
+func FetchUserByID(id string) (*User, error) {
 	var user User
 
 	row := db.QueryRow("select id, email, hash, salt, first_name, last_name, role, jti from users where id = ?", id)
@@ -61,7 +60,7 @@ func FetchUserByID(id int64) (*User, error) {
 		return nil, err
 	}
 
-	logger.Infof("User %v fetched", id)
+	logger.Infof("User [%v] fetched", id)
 	return &user, nil
 }
 

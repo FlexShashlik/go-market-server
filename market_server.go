@@ -92,7 +92,7 @@ connect:
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
 			return &User{
-				ID:  int64(claims["id"].(float64)),
+				ID:  claims["id"].(string),
 				JTI: claims["jti"].(string),
 			}
 		},
