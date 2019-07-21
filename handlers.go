@@ -240,16 +240,15 @@ func FetchAllProducts(c *gin.Context) {
 	}
 }
 
-// FetchSingleProduct fetches single product
-func FetchSingleProduct(c *gin.Context) {
-	var product Product
-	productID := c.Param("id")
+// FetchProductsBySubCatalog fetches products by subcatalog
+func FetchProductsBySubCatalog(c *gin.Context) {
+	var products []Product
+	subCatalogID := c.Param("sub_catalog_id")
 
-	row := db.QueryRow("select id, name, price, image_extension, sub_catalog_id from products where id = ?", productID)
-	err := row.Scan(&product.ID, &product.Name, &product.Price, &product.ImageExtension, &product.SubCatalogID)
+	rows, err := db.Query("select id, name, price, image_extension, sub_catalog_id from products where sub_catalog_id = ?", subCatalogID)
 
 	if err != nil {
-		logger.Errorf("[DB Query : FetchSingleProduct : row.Scan] %v; productID = %v", err, productID)
+		logger.Errorf("[DB Query : FetchProductsBySubCatalog] %v", err)
 		c.JSON(
 			http.StatusNotImplemented,
 			gin.H{
@@ -257,8 +256,19 @@ func FetchSingleProduct(c *gin.Context) {
 				"message": err.Error(),
 			})
 	} else {
-		logger.Infof("Product %v fetched", productID)
-		c.JSON(http.StatusOK, product)
+		for rows.Next() {
+			p := Product{}
+
+			err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageExtension, &p.SubCatalogID)
+
+			if err != nil {
+				logger.Errorf("[DB Query : FetchProductsBySubCatalog : rows.Scan] %v", err)
+				continue
+			}
+			products = append(products, p)
+		}
+		logger.Infof("Products by subcatalog [%v] fetched", subCatalogID)
+		c.JSON(http.StatusOK, products)
 	}
 }
 
