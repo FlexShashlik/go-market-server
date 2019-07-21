@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"crypto/sha1"
 	"net/http"
 
@@ -202,10 +203,11 @@ func CreateProduct(c *gin.Context) {
 					"message": err.Error(),
 				})
 		} else {
+			product.ID = strconv.FormatInt(productID, 10)
 			UploadImage(&product, c)
 
 			logger.Infof("Product [%v] created", product)
-			c.JSON(http.StatusCreated, gin.H{"productID": productID})
+			c.JSON(http.StatusCreated, gin.H{"productID": product.ID})
 		}
 	}
 }
