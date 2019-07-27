@@ -37,13 +37,13 @@ type Product struct {
 
 // Catalog demo struct
 type Catalog struct {
-	ID   string `json:"id"`
+	ID   int64  `json:"id"`
 	Name string `json:"name"`
 }
 
 // SubCatalog demo struct
 type SubCatalog struct {
-	ID        string `json:"id"`
+	ID        int64  `json:"id"`
 	Name      string `json:"name"`
 	CatalogID string `json:"catalog_id"`
 }

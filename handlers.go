@@ -148,7 +148,7 @@ func CreateUser(c *gin.Context) {
 						})
 				} else {
 					logger.Infof("User [%v] created", user)
-					c.JSON(http.StatusCreated, gin.H{"userID": userID})
+					c.JSON(http.StatusCreated, gin.H{"ID": userID})
 				}
 			}
 		}
@@ -160,55 +160,6 @@ func CreateUser(c *gin.Context) {
 				"status":  http.StatusNotImplemented,
 				"message": "Sign up data is invalid!",
 			})
-	}
-}
-
-// CreateProduct creates new product
-func CreateProduct(c *gin.Context) {
-	var product Product
-
-	if err := c.ShouldBind(&product); err != nil {
-		logger.Errorf("[CreateProduct] %v", err)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error(),
-			})
-	}
-
-	result, err := db.Exec(
-		"insert into products (name, price, image_extension, sub_catalog_id) values (?, ?, ?, ?)",
-		product.Name,
-		product.Price,
-		product.ImageExtension,
-		product.SubCatalogID)
-
-	if err != nil {
-		logger.Errorf("[DB Query : CreateProduct] %v", err)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error(),
-			})
-	} else {
-		productID, err := result.LastInsertId()
-		if err != nil {
-			logger.Errorf("[DB Query : CreateProduct : LastInsertID] %v; ", err)
-			c.JSON(
-				http.StatusNotImplemented,
-				gin.H{
-					"status":  http.StatusNotImplemented,
-					"message": err.Error(),
-				})
-		} else {
-			product.ID = strconv.FormatInt(productID, 10)
-			UploadImage(&product, c)
-
-			logger.Infof("Product [%v] created", product)
-			c.JSON(http.StatusCreated, gin.H{"productID": product.ID})
-		}
 	}
 }
 
@@ -271,6 +222,55 @@ func FetchProductsBySubCatalog(c *gin.Context) {
 		}
 		logger.Infof("Products by subcatalog [%v] fetched", subCatalogID)
 		c.JSON(http.StatusOK, products)
+	}
+}
+
+// CreateProduct creates new product
+func CreateProduct(c *gin.Context) {
+	var product Product
+
+	if err := c.ShouldBind(&product); err != nil {
+		logger.Errorf("[CreateProduct] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	}
+
+	result, err := db.Exec(
+		"insert into products (name, price, image_extension, sub_catalog_id) values (?, ?, ?, ?)",
+		product.Name,
+		product.Price,
+		product.ImageExtension,
+		product.SubCatalogID)
+
+	if err != nil {
+		logger.Errorf("[DB Query : CreateProduct] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		productID, err := result.LastInsertId()
+		if err != nil {
+			logger.Errorf("[DB Query : CreateProduct : LastInsertID] %v; ", err)
+			c.JSON(
+				http.StatusNotImplemented,
+				gin.H{
+					"status":  http.StatusNotImplemented,
+					"message": err.Error(),
+				})
+		} else {
+			product.ID = strconv.FormatInt(productID, 10)
+			UploadImage(&product, c)
+
+			logger.Infof("Product [%v] created", product)
+			c.JSON(http.StatusCreated, gin.H{"ID": product.ID})
+		}
 	}
 }
 
@@ -344,5 +344,47 @@ func DeleteProduct(c *gin.Context) {
 				"status":  http.StatusOK,
 				"message": "Product deleted successfully!",
 			})
+	}
+}
+
+// CreateCatalog stupid linter
+func CreateCatalog(c *gin.Context) {
+	var catalog Catalog
+
+	if err := c.ShouldBind(&catalog); err != nil {
+		logger.Errorf("[CreateCatalog] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	}
+
+	result, err := db.Exec("insert into catalog (name) values (?)",
+							catalog.Name)
+
+	if err != nil {
+		logger.Errorf("[DB Query : CreateCatalog] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		catalog.ID, err = result.LastInsertId()
+		if err != nil {
+			logger.Errorf("[DB Query : CreateCatalog : LastInsertID] %v; ", err)
+			c.JSON(
+				http.StatusNotImplemented,
+				gin.H{
+					"status":  http.StatusNotImplemented,
+					"message": err.Error(),
+				})
+		} else {
+			logger.Infof("Catalog [%v] created", catalog)
+			c.JSON(http.StatusCreated, gin.H{"ID": catalog.ID})
+		}
 	}
 }

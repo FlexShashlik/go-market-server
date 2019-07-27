@@ -69,8 +69,8 @@ connect:
 		PrivKeyFile:      "../jwt.key",
 		PubKeyFile:       "../jwt_pub.key",
 		SigningAlgorithm: "RS512",
-		Timeout:          time.Hour,
-		MaxRefresh:       time.Hour,
+		Timeout:          time.Hour * 24 * 14,
+		MaxRefresh:       time.Hour * 24 * 14,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			jti, _ := GenerateRandomString(10)
 
@@ -180,6 +180,14 @@ connect:
 		admin.POST("products/", CreateProduct)
 		admin.PUT("products/:id", UpdateProduct)
 		admin.DELETE("products/:id", DeleteProduct)
+
+		admin.POST("catalog/", CreateCatalog)
+		//admin.PUT("catalog/:id", UpdateCatalog)
+		//admin.DELETE("catalog/:id", DeleteCatalog)
+
+		//admin.POST("sub_catalog/", CreateSubCatalog)
+		//admin.PUT("sub_catalog/:id", UpdateSubCatalog)
+		//admin.DELETE("sub_catalog/:id", DeleteSubCatalog)
 	}
 
 	router.Run()
