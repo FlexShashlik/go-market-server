@@ -1,9 +1,9 @@
 package main
 
 import (
-	"strconv"
 	"crypto/sha1"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/crypto/pbkdf2"
 
@@ -362,7 +362,7 @@ func CreateCatalog(c *gin.Context) {
 	}
 
 	result, err := db.Exec("insert into catalog (name) values (?)",
-							catalog.Name)
+		catalog.Name)
 
 	if err != nil {
 		logger.Errorf("[DB Query : CreateCatalog] %v", err)
@@ -385,6 +385,49 @@ func CreateCatalog(c *gin.Context) {
 		} else {
 			logger.Infof("Catalog [%v] created", catalog)
 			c.JSON(http.StatusCreated, gin.H{"ID": catalog.ID})
+		}
+	}
+}
+
+// CreateSubCatalog ah shit here we go again
+func CreateSubCatalog(c *gin.Context) {
+	var subCatalog SubCatalog
+
+	if err := c.ShouldBind(&subCatalog); err != nil {
+		logger.Errorf("[CreateSubCatalog] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	}
+
+	result, err := db.Exec("insert into sub_catalog (name, catalog_id) values (?, ?)",
+		subCatalog.Name,
+		subCatalog.CatalogID)
+
+	if err != nil {
+		logger.Errorf("[DB Query : CreateSubCatalog] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		subCatalog.ID, err = result.LastInsertId()
+		if err != nil {
+			logger.Errorf("[DB Query : CreateSubCatalog : LastInsertID] %v; ", err)
+			c.JSON(
+				http.StatusNotImplemented,
+				gin.H{
+					"status":  http.StatusNotImplemented,
+					"message": err.Error(),
+				})
+		} else {
+			logger.Infof("SubCatalog [%v] created", subCatalog)
+			c.JSON(http.StatusCreated, gin.H{"ID": subCatalog.ID})
 		}
 	}
 }
