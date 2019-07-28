@@ -1,12 +1,12 @@
 package main
 
-// Login demo struct
+// Login struct
 type Login struct {
 	Email    string `form:"email" json:"email" binding:"required"`
 	Password string `form:"password" json:"password" binding:"required"`
 }
 
-// SignUp demo struct
+// SignUp struct
 type SignUp struct {
 	Email     string `form:"email" json:"email" binding:"required"`
 	Password  string `form:"password" json:"password" binding:"required"`
@@ -14,7 +14,7 @@ type SignUp struct {
 	LastName  string `form:"last_name" json:"last_name" binding:"required"`
 }
 
-// User demo struct
+// User struct
 type User struct {
 	ID        string `json:"id"`
 	Email     string `json:"email"`
@@ -26,7 +26,7 @@ type User struct {
 	JTI       string `json:"jti"`
 }
 
-// Product demo struct
+// Product struct
 type Product struct {
 	ID             string `form:"id" json:"id"`
 	Name           string `form:"name" json:"name"`
@@ -35,13 +35,13 @@ type Product struct {
 	SubCatalogID   string `form:"sub_catalog_id" json:"sub_catalog_id"`
 }
 
-// Catalog demo struct
+// Catalog struct
 type Catalog struct {
 	ID   int64  `form:"id" json:"id"`
 	Name string `form:"name" json:"name"`
 }
 
-// SubCatalog demo struct
+// SubCatalog struct
 type SubCatalog struct {
 	ID        int64  `form:"id" json:"id"`
 	Name      string `form:"name" json:"name"`

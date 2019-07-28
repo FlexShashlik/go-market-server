@@ -22,7 +22,6 @@ func HelloHandler(c *gin.Context) {
 	})
 }
 
-// FetchCatalog fetches catalog
 func FetchCatalog(c *gin.Context) {
 	var catalog []Catalog
 
@@ -52,7 +51,6 @@ func FetchCatalog(c *gin.Context) {
 	}
 }
 
-// FetchSubCatalog fetches sub_catalog
 func FetchSubCatalog(c *gin.Context) {
 	var subCatalog []SubCatalog
 
@@ -82,7 +80,6 @@ func FetchSubCatalog(c *gin.Context) {
 	}
 }
 
-// CreateUser registers new user
 func CreateUser(c *gin.Context) {
 	logger.Info("[CreateUser] attempt to create new user")
 
@@ -193,7 +190,6 @@ func FetchAllProducts(c *gin.Context) {
 	}
 }
 
-// FetchProductsBySubCatalog fetches products by subcatalog
 func FetchProductsBySubCatalog(c *gin.Context) {
 	var products []Product
 	subCatalogID := c.Param("sub_catalog_id")
@@ -225,7 +221,6 @@ func FetchProductsBySubCatalog(c *gin.Context) {
 	}
 }
 
-// CreateProduct creates new product
 func CreateProduct(c *gin.Context) {
 	var product Product
 
@@ -274,7 +269,6 @@ func CreateProduct(c *gin.Context) {
 	}
 }
 
-// UpdateProduct updates product
 func UpdateProduct(c *gin.Context) {
 	var product Product
 
@@ -324,7 +318,6 @@ func UpdateProduct(c *gin.Context) {
 	}
 }
 
-// DeleteProduct deletes product
 func DeleteProduct(c *gin.Context) {
 	_, err := db.Exec("delete from products where id = ?", c.Param("id"))
 
@@ -347,7 +340,6 @@ func DeleteProduct(c *gin.Context) {
 	}
 }
 
-// CreateCatalog stupid linter
 func CreateCatalog(c *gin.Context) {
 	var catalog Catalog
 
@@ -389,7 +381,46 @@ func CreateCatalog(c *gin.Context) {
 	}
 }
 
-// CreateSubCatalog ah shit here we go again
+func UpdateCatalog(c *gin.Context) {
+	var catalog Catalog
+
+	if err := c.ShouldBind(&catalog); err != nil {
+		logger.Errorf("[UpdateCatalog] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	}
+
+	catalog.ID, _ = strconv.ParseInt(c.Param("id"), 10, 64)
+
+	_, err := db.Exec(
+		"update catalog SET name = ? where id = ?",
+		catalog.Name,
+		catalog.ID,
+	)
+
+	if err != nil {
+		logger.Errorf("[DB Query : UpdateCatalog] %v; catalog = %v", err, catalog)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		logger.Infof("Catalog updated to %v", catalog)
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"status":  http.StatusOK,
+				"message": "Catalog updated successfully!",
+			})
+	}
+}
+
 func CreateSubCatalog(c *gin.Context) {
 	var subCatalog SubCatalog
 
