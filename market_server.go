@@ -178,7 +178,7 @@ connect:
 
 		admin.POST("catalog/", CreateCatalog)
 		admin.PUT("catalog/:id", UpdateCatalog)
-		//admin.DELETE("catalog/:id", DeleteCatalog)
+		admin.DELETE("catalog/:id", DeleteCatalog)
 
 		admin.POST("sub_catalog/", CreateSubCatalog)
 		admin.PUT("sub_catalog/:id", UpdateSubCatalog)

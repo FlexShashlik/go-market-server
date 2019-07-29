@@ -409,6 +409,28 @@ func UpdateCatalog(c *gin.Context) {
 	}
 }
 
+func DeleteCatalog(c *gin.Context) {
+	_, err := db.Exec("delete from catalog where id = ?", c.Param("id"))
+
+	if err != nil {
+		logger.Errorf("[DB Query : DeleteCatalog] %v; productID = %v", err, c.Param("id"))
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		logger.Infof("Catalog %v deleted", c.Param("id"))
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"status":  http.StatusOK,
+				"message": "Deleted successfully!",
+			})
+	}
+}
+
 func CreateSubCatalog(c *gin.Context) {
 	var subCatalog SubCatalog
 
