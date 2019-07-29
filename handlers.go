@@ -413,7 +413,7 @@ func DeleteCatalog(c *gin.Context) {
 	_, err := db.Exec("delete from catalog where id = ?", c.Param("id"))
 
 	if err != nil {
-		logger.Errorf("[DB Query : DeleteCatalog] %v; productID = %v", err, c.Param("id"))
+		logger.Errorf("[DB Query : DeleteCatalog] %v; ID = %v", err, c.Param("id"))
 		c.JSON(
 			http.StatusNotImplemented,
 			gin.H{
@@ -510,6 +510,28 @@ func UpdateSubCatalog(c *gin.Context) {
 			gin.H{
 				"status":  http.StatusOK,
 				"message": "Updated successfully!",
+			})
+	}
+}
+
+func DeleteSubCatalog(c *gin.Context) {
+	_, err := db.Exec("delete from sub_catalog where id = ?", c.Param("id"))
+
+	if err != nil {
+		logger.Errorf("[DB Query : DeleteSubCatalog] %v; ID = %v", err, c.Param("id"))
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		logger.Infof("SubCatalog %v deleted", c.Param("id"))
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"status":  http.StatusOK,
+				"message": "Deleted successfully!",
 			})
 	}
 }

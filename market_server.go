@@ -182,7 +182,7 @@ connect:
 
 		admin.POST("sub_catalog/", CreateSubCatalog)
 		admin.PUT("sub_catalog/:id", UpdateSubCatalog)
-		//admin.DELETE("sub_catalog/:id", DeleteSubCatalog)
+		admin.DELETE("sub_catalog/:id", DeleteSubCatalog)
 	}
 
 	router.Run()
