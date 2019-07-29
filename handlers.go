@@ -7,20 +7,9 @@ import (
 
 	"golang.org/x/crypto/pbkdf2"
 
-	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/logger"
 )
-
-// HelloHandler demo
-func HelloHandler(c *gin.Context) {
-	claims := jwt.ExtractClaims(c)
-	c.JSON(200, gin.H{
-		"id":   claims["id"],
-		"jti":  claims["jti"],
-		"text": "Hello World.",
-	})
-}
 
 func FetchCatalog(c *gin.Context) {
 	var catalog []Catalog
@@ -160,7 +149,6 @@ func CreateUser(c *gin.Context) {
 	}
 }
 
-// FetchAllProducts fetches all products
 func FetchAllProducts(c *gin.Context) {
 	var products []Product
 

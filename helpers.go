@@ -9,7 +9,6 @@ import (
 	"github.com/google/logger"
 )
 
-// UploadImage loads image from post request to memory
 func UploadImage(product *Product, c *gin.Context) {
 	file, err := c.FormFile("image")
 	if err != nil {
@@ -34,7 +33,6 @@ func UploadImage(product *Product, c *gin.Context) {
 	}
 }
 
-// FetchUserByEmail fetches user info by email
 func FetchUserByEmail(email string) (*User, error) {
 	var user User
 
@@ -49,7 +47,6 @@ func FetchUserByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-// FetchUserByID fetches user info by id
 func FetchUserByID(id string) (*User, error) {
 	var user User
 
@@ -64,7 +61,6 @@ func FetchUserByID(id string) (*User, error) {
 	return &user, nil
 }
 
-// IsSignUpDataValid checks data valid or not
 func IsSignUpDataValid(data SignUp) bool {
 	var firstName, lastName, email, password bool
 

@@ -170,11 +170,6 @@ connect:
 		auth.GET("refresh_token/", authMiddleware.RefreshHandler)
 	}
 
-	auth.Use(authMiddleware.MiddlewareFunc())
-	{
-		auth.GET("hello/", HelloHandler)
-	}
-
 	admin := router.Group("/api/v1/admin/").Use(authMiddleware.MiddlewareFunc())
 	{
 		admin.POST("products/", CreateProduct)
