@@ -404,7 +404,7 @@ func UpdateCatalog(c *gin.Context) {
 			http.StatusOK,
 			gin.H{
 				"status":  http.StatusOK,
-				"message": "Catalog updated successfully!",
+				"message": "Updated successfully!",
 			})
 	}
 }
@@ -448,5 +448,46 @@ func CreateSubCatalog(c *gin.Context) {
 			logger.Infof("SubCatalog [%v] created", subCatalog)
 			c.JSON(http.StatusCreated, gin.H{"ID": subCatalog.ID})
 		}
+	}
+}
+
+func UpdateSubCatalog(c *gin.Context) {
+	var subCatalog SubCatalog
+
+	if err := c.ShouldBind(&subCatalog); err != nil {
+		logger.Errorf("[UpdateSubCatalog] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	}
+
+	subCatalog.ID, _ = strconv.ParseInt(c.Param("id"), 10, 64)
+
+	_, err := db.Exec(
+		"update sub_catalog SET name = ?, catalog_id = ? where id = ?",
+		subCatalog.Name,
+		subCatalog.CatalogID,
+		subCatalog.ID,
+	)
+
+	if err != nil {
+		logger.Errorf("[DB Query : UpdateSubCatalog] %v; SubCatalog = %v", err, subCatalog)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		logger.Infof("SubCatalog updated to %v", subCatalog)
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"status":  http.StatusOK,
+				"message": "Updated successfully!",
+			})
 	}
 }
