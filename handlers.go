@@ -261,7 +261,7 @@ func UpdateProduct(c *gin.Context) {
 	var product Product
 
 	if err := c.ShouldBind(&product); err != nil {
-		logger.Errorf("[CreateProduct] %v", err)
+		logger.Errorf("[UpdateProduct] %v", err)
 		c.JSON(
 			http.StatusNotImplemented,
 			gin.H{
@@ -290,9 +290,8 @@ func UpdateProduct(c *gin.Context) {
 				"message": err.Error(),
 			})
 	} else {
-		if c.PostForm("image") != "" {
-			UploadImage(&product, c)
-		}
+		UploadImage(&product, c)
+		
 
 		logger.Infof("Product updated to %v", product)
 		c.JSON(

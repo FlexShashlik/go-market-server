@@ -11,13 +11,9 @@ import (
 
 func UploadImage(product *Product, c *gin.Context) {
 	file, err := c.FormFile("image")
+
 	if err != nil {
 		logger.Errorf("[DB Query : CreateProduct : FormFile()] %v", err)
-		c.JSON(
-			http.StatusNotImplemented,
-			gin.H{
-				"status":  http.StatusNotImplemented,
-				"message": err.Error()})
 		return
 	}
 
