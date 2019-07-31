@@ -289,7 +289,9 @@ func UpdateProduct(c *gin.Context) {
 				"message": err.Error(),
 			})
 	} else {
-		UploadImage(&product, c)
+		if c.PostForm("image") != "" {
+			UploadImage(&product, c)
+		}
 
 		logger.Infof("Product %v updated to name = %v, price = %v, image_extension = %v",
 			product.ID,
