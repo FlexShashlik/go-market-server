@@ -273,10 +273,11 @@ func UpdateProduct(c *gin.Context) {
 	product.ID = c.Param("id")
 
 	_, err := db.Exec(
-		"update products SET name = ?, price = ?, image_extension = ? where id = ?",
+		"update products SET name = ?, price = ?, image_extension = ?, sub_catalog_id = ? where id = ?",
 		product.Name,
 		product.Price,
 		product.ImageExtension,
+		product.SubCatalogID,
 		product.ID,
 	)
 
@@ -293,12 +294,7 @@ func UpdateProduct(c *gin.Context) {
 			UploadImage(&product, c)
 		}
 
-		logger.Infof("Product %v updated to name = %v, price = %v, image_extension = %v",
-			product.ID,
-			product.Name,
-			product.Price,
-			product.ImageExtension,
-		)
+		logger.Infof("Product updated to %v", product)
 		c.JSON(
 			http.StatusOK,
 			gin.H{
