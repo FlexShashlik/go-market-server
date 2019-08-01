@@ -185,7 +185,7 @@ connect:
 		admin.DELETE("sub_catalog/:id", DeleteSubCatalog)
 
 		admin.GET("users/", FetchAllUsers)
-		//admin.PUT("users/:id", UpdateUser)
+		admin.PUT("users/:id", UpdateUser)
 		//admin.DELETE("users/:id", DeleteUser)
 	}
 

@@ -121,3 +121,46 @@ func FetchAllUsers(c *gin.Context) {
 		c.JSON(http.StatusOK, users)
 	}
 }
+
+func UpdateUser(c *gin.Context) {
+	var user User
+
+	if err := c.ShouldBind(&user); err != nil {
+		logger.Errorf("[UpdateUser] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	}
+
+	user.ID = c.Param("id")
+
+	_, err := db.Exec(
+		"update users SET email = ?, first_name = ?, last_name = ?, role = ? where id = ?",
+		user.Email,
+		user.FirstName,
+		user.LastName,
+		user.Role,
+		user.ID,
+	)
+
+	if err != nil {
+		logger.Errorf("[DB Query : UpdateUser] %v; User = %v", err, user)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		logger.Infof("User updated to %v", user)
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"status":  http.StatusOK,
+				"message": "Updated successfully!",
+			})
+	}
+}
