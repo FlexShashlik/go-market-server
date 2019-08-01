@@ -13,14 +13,14 @@ type SignUp struct {
 }
 
 type User struct {
-	ID        string `json:"id"`
-	Email     string `json:"email"`
-	Hash      []byte `json:"hash"`
-	Salt      string `json:"salt"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Role      string `json:"role"`
-	JTI       string `json:"jti"`
+	ID        string `form:"id" json:"id"`
+	Email     string `form:"email" json:"email"`
+	Hash      []byte `form:"hash" json:"hash"`
+	Salt      string `form:"salt" json:"salt"`
+	FirstName string `form:"first_name" json:"first_name"`
+	LastName  string `form:"last_name" json:"last_name"`
+	Role      string `form:"role" json:"role"`
+	JTI       string `form:"jti" json:"jti"`
 }
 
 type Product struct {
