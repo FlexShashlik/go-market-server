@@ -37,6 +37,7 @@ func FetchCatalog(c *gin.Context) {
 
 			catalog = append(catalog, c)
 		}
+
 		logger.Infof("Catalog fetched")
 		c.JSON(http.StatusOK, catalog)
 	}
@@ -78,6 +79,7 @@ func CreateUser(c *gin.Context) {
 
 	var signUp SignUp
 	var user User
+
 	if err := c.ShouldBind(&signUp); err != nil {
 		logger.Errorf("[CreateUser] %v", err)
 		c.JSON(
@@ -211,6 +213,7 @@ func FetchAllProducts(c *gin.Context) {
 
 			products = append(products, p)
 		}
+
 		logger.Infof("Products fetched")
 		c.JSON(http.StatusOK, products)
 	}
@@ -218,6 +221,7 @@ func FetchAllProducts(c *gin.Context) {
 
 func FetchProductsBySubCatalog(c *gin.Context) {
 	var products []Product
+
 	subCatalogID := c.Param("sub_catalog_id")
 
 	rows, err := db.Query("select id, name, price, image_extension, sub_catalog_id from products where sub_catalog_id = ?", subCatalogID)
@@ -243,6 +247,7 @@ func FetchProductsBySubCatalog(c *gin.Context) {
 
 			products = append(products, p)
 		}
+
 		logger.Infof("Products by subcatalog [%v] fetched", subCatalogID)
 		c.JSON(http.StatusOK, products)
 	}
@@ -494,6 +499,7 @@ func CreateSubCatalog(c *gin.Context) {
 			})
 	} else {
 		subCatalog.ID, err = result.LastInsertId()
+		
 		if err != nil {
 			logger.Errorf("[DB Query : CreateSubCatalog : LastInsertID] %v; ", err)
 			c.JSON(
