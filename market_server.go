@@ -186,7 +186,7 @@ connect:
 
 		admin.GET("users/", FetchAllUsers)
 		admin.PUT("users/:id", UpdateUser)
-		//admin.DELETE("users/:id", DeleteUser)
+		admin.DELETE("users/:id", DeleteUser)
 	}
 
 	router.Run()

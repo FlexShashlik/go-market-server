@@ -164,3 +164,25 @@ func UpdateUser(c *gin.Context) {
 			})
 	}
 }
+
+func DeleteUser(c *gin.Context) {
+	_, err := db.Exec("delete from users where id = ?", c.Param("id"))
+
+	if err != nil {
+		logger.Errorf("[DB Query : DeleteUser] %v; ID = %v", err, c.Param("id"))
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		logger.Infof("User %v deleted", c.Param("id"))
+		c.JSON(
+			http.StatusOK,
+			gin.H{
+				"status":  http.StatusOK,
+				"message": "Deleted successfully!",
+			})
+	}
+}
