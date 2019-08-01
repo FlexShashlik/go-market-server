@@ -15,6 +15,7 @@ func FetchCatalog(c *gin.Context) {
 	var catalog []Catalog
 
 	rows, err := db.Query("select id, name from catalog")
+
 	if err != nil {
 		logger.Errorf("[DB Query : FetchCatalog] %v", err)
 		c.JSON(
@@ -33,6 +34,7 @@ func FetchCatalog(c *gin.Context) {
 				logger.Errorf("[DB Query : FetchCatalog : rows.Scan] %v", err)
 				continue
 			}
+
 			catalog = append(catalog, c)
 		}
 		logger.Infof("Catalog fetched")
@@ -44,6 +46,7 @@ func FetchSubCatalog(c *gin.Context) {
 	var subCatalog []SubCatalog
 
 	rows, err := db.Query("select id, name, catalog_id from sub_catalog")
+
 	if err != nil {
 		logger.Errorf("[DB Query : FetchSubCatalog] %v", err)
 		c.JSON(
@@ -62,6 +65,7 @@ func FetchSubCatalog(c *gin.Context) {
 				logger.Errorf("[DB Query : FetchSubCatalog : rows.Scan] %v", err)
 				continue
 			}
+			
 			subCatalog = append(subCatalog, sc)
 		}
 		logger.Infof("SubCatalog fetched")
@@ -149,10 +153,43 @@ func CreateUser(c *gin.Context) {
 	}
 }
 
+func FetchAllUsers(c *gin.Context) {
+	var users []User
+
+	rows, err := db.Query("select id, email, first_name, last_name, role from users")
+
+	if err != nil {
+		logger.Errorf("[DB Query : FetchAllUsers] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		for rows.Next() {
+			u := User{}
+
+			err := rows.Scan(&u.ID, &u.Email, &u.FirstName, &u.LastName, &u.Role)
+
+			if err != nil {
+				logger.Errorf("[DB Query : FetchAllUsers : rows.Scan] %v", err)
+				continue
+			}
+
+			users = append(users, u)
+		}
+
+		logger.Infof("Users fetched")
+		c.JSON(http.StatusOK, users)
+	}
+}
+
 func FetchAllProducts(c *gin.Context) {
 	var products []Product
 
 	rows, err := db.Query("select id, name, price, image_extension, sub_catalog_id from products")
+
 	if err != nil {
 		logger.Errorf("[DB Query : FetchAllProducts] %v", err)
 		c.JSON(
@@ -171,6 +208,7 @@ func FetchAllProducts(c *gin.Context) {
 				logger.Errorf("[DB Query : FetchAllProducts : rows.Scan] %v", err)
 				continue
 			}
+
 			products = append(products, p)
 		}
 		logger.Infof("Products fetched")
@@ -202,6 +240,7 @@ func FetchProductsBySubCatalog(c *gin.Context) {
 				logger.Errorf("[DB Query : FetchProductsBySubCatalog : rows.Scan] %v", err)
 				continue
 			}
+
 			products = append(products, p)
 		}
 		logger.Infof("Products by subcatalog [%v] fetched", subCatalogID)
@@ -239,6 +278,7 @@ func CreateProduct(c *gin.Context) {
 			})
 	} else {
 		productID, err := result.LastInsertId()
+
 		if err != nil {
 			logger.Errorf("[DB Query : CreateProduct : LastInsertID] %v; ", err)
 			c.JSON(
@@ -291,7 +331,6 @@ func UpdateProduct(c *gin.Context) {
 			})
 	} else {
 		UploadImage(&product, c)
-		
 
 		logger.Infof("Product updated to %v", product)
 		c.JSON(
