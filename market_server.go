@@ -39,7 +39,7 @@ func main() {
 	// Connect to the DB:
 connect:
 
-	db, err = sql.Open("mysql", "admin:veryStrongnt@tcp(127.0.0.1:3306)/market")
+	db, err = sql.Open("mysql", "Sevada:LAliMDVIG24\\#@tcp(127.0.0.1:3306)/market")
 	if err != nil {
 		logger.Errorf("Connect to the DB failed: %v", err)
 		logger.Info("Tryna do it one more time...")
@@ -157,10 +157,14 @@ connect:
 
 	anon := router.Group("/api/v1/")
 	{
+		anon.GET("colors/", FetchColors)
+
 		anon.GET("catalog/", FetchCatalog)
 		anon.GET("sub_catalog/", FetchSubCatalog)
+
 		anon.GET("products/", FetchAllProducts)
 		anon.GET("products/:sub_catalog_id", FetchProductsBySubCatalog)
+
 		anon.POST("sign_up/", CreateUser)
 	}
 

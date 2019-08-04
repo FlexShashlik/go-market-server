@@ -17,7 +17,7 @@ func UploadImage(product *Product, c *gin.Context) {
 		return
 	}
 
-	filename := "/var/www/html/images/" + product.ID + "." + product.ImageExtension
+	filename := "C:/xampp/htdocs/images/" + product.ID + "." + product.ImageExtension
 	if err := c.SaveUploadedFile(file, filename); err != nil {
 		logger.Errorf("[DB Query : CreateProduct : SaveUploadedFile()] %v", err)
 		c.JSON(

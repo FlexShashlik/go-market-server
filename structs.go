@@ -41,3 +41,8 @@ type SubCatalog struct {
 	Name      string `form:"name" json:"name"`
 	CatalogID string `form:"catalog_id" json:"catalog_id"`
 }
+
+type Color struct {
+	ID  int64 `json:"id"`
+	RAL int64 `json:"ral"`
+}
