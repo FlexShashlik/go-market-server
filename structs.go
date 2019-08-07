@@ -46,3 +46,8 @@ type Color struct {
 	ID  int64 `json:"id"`
 	RAL int64 `json:"ral"`
 }
+
+type Covering struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}

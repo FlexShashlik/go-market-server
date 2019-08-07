@@ -159,6 +159,8 @@ connect:
 	{
 		anon.GET("colors/", FetchColors)
 
+		anon.GET("coverings/", FetchCoverings)
+
 		anon.GET("catalog/", FetchCatalog)
 		anon.GET("sub_catalog/", FetchSubCatalog)
 
