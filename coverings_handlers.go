@@ -69,3 +69,37 @@ func FetchCoverings(c *gin.Context) {
 		c.JSON(http.StatusOK, coverings)
 	}
 }
+
+func FetchColorsByCovering(c *gin.Context) {
+	var colors []Color
+
+	rows, err := db.Query(
+		"select colors.id, colors.ral from combinations inner join colors on combinations.color_id = colors.id where covering_id = ?", c.Param("id"),
+	)
+
+	if err != nil {
+		logger.Errorf("[DB Query : FetchColorsByCovering] %v", err)
+		c.JSON(
+			http.StatusNotImplemented,
+			gin.H{
+				"status":  http.StatusNotImplemented,
+				"message": err.Error(),
+			})
+	} else {
+		for rows.Next() {
+			c := Color{}
+
+			err := rows.Scan(&c.ID, &c.RAL)
+
+			if err != nil {
+				logger.Errorf("[DB Query : FetchColorsByCovering : rows.Scan] %v", err)
+				continue
+			}
+
+			colors = append(colors, c)
+		}
+
+		logger.Infof("Colors fetched")
+		c.JSON(http.StatusOK, colors)
+	}
+}

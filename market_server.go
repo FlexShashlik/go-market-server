@@ -158,6 +158,7 @@ connect:
 	anon := router.Group("/api/v1/")
 	{
 		anon.GET("colors/", FetchColors)
+		anon.GET("colors/:id", FetchColorsByCovering)
 
 		anon.GET("coverings/", FetchCoverings)
 

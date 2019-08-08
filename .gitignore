@@ -1,4 +1,4 @@
 *.log
-*.exe
+*.exe*
 *.key
 *.out
