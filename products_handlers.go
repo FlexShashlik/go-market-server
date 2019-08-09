@@ -11,7 +11,7 @@ import (
 func FetchAllProducts(c *gin.Context) {
 	var products []Product
 
-	rows, err := db.Query("select id, name, price, image_extension, sub_catalog_id from products")
+	rows, err := db.Query("select id, name, image_extension, sub_catalog_id, folds, product_per_list from products")
 
 	if err != nil {
 		logger.Errorf("[DB Query : FetchAllProducts] %v", err)
@@ -25,12 +25,21 @@ func FetchAllProducts(c *gin.Context) {
 		for rows.Next() {
 			p := Product{}
 
-			err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageExtension, &p.SubCatalogID)
+			err := rows.Scan(
+				&p.ID, 
+				&p.Name, 
+				&p.ImageExtension, 
+				&p.SubCatalogID, 
+				&p.Folds, 
+				&p.ProductPerList,
+			)
 
 			if err != nil {
 				logger.Errorf("[DB Query : FetchAllProducts : rows.Scan] %v", err)
 				continue
 			}
+
+			EvaluateProduct(&p, 0, 0);
 
 			products = append(products, p)
 		}
@@ -45,7 +54,7 @@ func FetchProductsBySubCatalog(c *gin.Context) {
 
 	subCatalogID := c.Param("id")
 
-	rows, err := db.Query("select id, name, price, image_extension, sub_catalog_id from products where sub_catalog_id = ?", subCatalogID)
+	rows, err := db.Query("select id, name, image_extension, sub_catalog_id, folds, product_per_list from products where sub_catalog_id = ?", subCatalogID)
 
 	if err != nil {
 		logger.Errorf("[DB Query : FetchProductsBySubCatalog] %v", err)
@@ -59,12 +68,21 @@ func FetchProductsBySubCatalog(c *gin.Context) {
 		for rows.Next() {
 			p := Product{}
 
-			err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.ImageExtension, &p.SubCatalogID)
+			err := rows.Scan(
+				&p.ID, 
+				&p.Name,
+				&p.ImageExtension,
+				&p.SubCatalogID,
+				&p.Folds,
+				&p.ProductPerList,
+			)
 
 			if err != nil {
 				logger.Errorf("[DB Query : FetchProductsBySubCatalog : rows.Scan] %v", err)
 				continue
 			}
+
+			EvaluateProduct(&p, 0, 0);
 
 			products = append(products, p)
 		}

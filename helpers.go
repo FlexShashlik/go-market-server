@@ -9,6 +9,57 @@ import (
 	"github.com/google/logger"
 )
 
+var pricePerFold int
+var brigadierCost int
+var standardCoveringPrice int
+
+func FetchConsts() {
+	row := db.QueryRow("select value from constants where name = ?", "price_per_fold")
+	err := row.Scan(&pricePerFold)
+
+	if err != nil {
+		logger.Errorf("[DB Query : FetchConsts : PricePerFold] %v", err)
+	}
+
+	logger.Infof("PricePerFold [%v] fetched", pricePerFold)
+
+	row = db.QueryRow("select value from constants where name = ?", "brigadier_cost")
+	err = row.Scan(&brigadierCost)
+
+	if err != nil {
+		logger.Errorf("[DB Query : FetchConsts : BrigadierCost] %v", err)
+	}
+
+	logger.Infof("BrigadierCost [%v] fetched", brigadierCost)
+}
+
+func FetchFirstCombo() {
+	row := db.QueryRow("select price from combinations")
+	err := row.Scan(&standardCoveringPrice)
+
+	if err != nil {
+		logger.Errorf("[DB Query : FetchFirstCombo] %v", err)
+	}
+
+	logger.Infof("StandardCoveringPrice [%v] fetched", standardCoveringPrice)
+}
+
+func EvaluateProduct(product *Product, colorID int, coveringID int) {
+	if (pricePerFold & brigadierCost) == 0 {
+		FetchConsts()
+	}
+
+	if (colorID & coveringID) == 0 {
+		if standardCoveringPrice == 0 {
+			FetchFirstCombo()
+		}
+
+		product.Price = (standardCoveringPrice / product.ProductPerList) + (product.Folds * pricePerFold) + brigadierCost
+	} else {
+		// Get custom combo
+	}
+}
+
 func UploadImage(product *Product, c *gin.Context) {
 	file, err := c.FormFile("image")
 
