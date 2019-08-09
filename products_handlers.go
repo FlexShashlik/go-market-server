@@ -43,7 +43,7 @@ func FetchAllProducts(c *gin.Context) {
 func FetchProductsBySubCatalog(c *gin.Context) {
 	var products []Product
 
-	subCatalogID := c.Param("sub_catalog_id")
+	subCatalogID := c.Param("id")
 
 	rows, err := db.Query("select id, name, price, image_extension, sub_catalog_id from products where sub_catalog_id = ?", subCatalogID)
 

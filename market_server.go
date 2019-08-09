@@ -167,7 +167,7 @@ connect:
 		anon.GET("sub_catalog/", FetchSubCatalog)
 
 		anon.GET("products/", FetchAllProducts)
-		anon.GET("products/:sub_catalog_id", FetchProductsBySubCatalog)
+		anon.GET("products/:id", FetchProductsBySubCatalog)
 
 		anon.POST("sign_up/", CreateUser)
 	}

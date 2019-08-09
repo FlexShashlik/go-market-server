@@ -13,13 +13,13 @@ func UploadImage(product *Product, c *gin.Context) {
 	file, err := c.FormFile("image")
 
 	if err != nil {
-		logger.Errorf("[DB Query : CreateProduct : FormFile()] %v", err)
+		logger.Errorf("[DB Query : UploadImage : FormFile()] %v", err)
 		return
 	}
 
 	filename := "C:/xampp/htdocs/images/" + product.ID + "." + product.ImageExtension
 	if err := c.SaveUploadedFile(file, filename); err != nil {
-		logger.Errorf("[DB Query : CreateProduct : SaveUploadedFile()] %v", err)
+		logger.Errorf("[DB Query : UploadImage : SaveUploadedFile()] %v", err)
 		c.JSON(
 			http.StatusNotImplemented,
 			gin.H{
