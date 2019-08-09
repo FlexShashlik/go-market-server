@@ -28,7 +28,7 @@ func FetchCustomComboPrice(c *gin.Context) {
 	EvaluateProduct(&p, colorID, coveringID)
 
 	logger.Infof("CustomComboPrice [%v] fetched", p.Price)
-	c.JSON(http.StatusOK, p.Price)
+	c.JSON(http.StatusOK, gin.H{"price":p.Price})
 }
 
 func FetchAllProducts(c *gin.Context) {
