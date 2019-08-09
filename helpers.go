@@ -9,12 +9,16 @@ import (
 	"github.com/google/logger"
 )
 
-var pricePerFold int
-var brigadierCost int
-var standardCoveringPrice int
+var pricePerFold int64
+var brigadierCost int64
+var standardCoveringPrice int64
 
 func FetchConsts() {
-	row := db.QueryRow("select value from constants where name = ?", "price_per_fold")
+	row := db.QueryRow(
+		"select value from constants where name = ?",
+		"price_per_fold",
+	)
+
 	err := row.Scan(&pricePerFold)
 
 	if err != nil {
@@ -44,19 +48,41 @@ func FetchFirstCombo() {
 	logger.Infof("StandardCoveringPrice [%v] fetched", standardCoveringPrice)
 }
 
-func EvaluateProduct(product *Product, colorID int, coveringID int) {
-	if (pricePerFold & brigadierCost) == 0 {
+func FetchCustomCombo(colorID int64, coveringID int64) int64 {
+	var customCoveringPrice int64
+
+	row := db.QueryRow(
+		"select price from combinations where color_id = ? and covering_id = ?",
+		colorID,
+		coveringID,
+	)
+
+	err := row.Scan(&customCoveringPrice)
+
+	if err != nil {
+		logger.Errorf("[DB Query : FetchCustomCombo] %v", err)
+	}
+
+	logger.Infof("CustomCoveringPrice [%v] fetched", customCoveringPrice)
+
+	return customCoveringPrice
+}
+
+func EvaluateProduct(product *Product, colorID int64, coveringID int64) {
+	if (pricePerFold | brigadierCost) == 0 {
 		FetchConsts()
 	}
 
-	if (colorID & coveringID) == 0 {
+	if (colorID | coveringID) == 0 {
 		if standardCoveringPrice == 0 {
 			FetchFirstCombo()
 		}
 
 		product.Price = (standardCoveringPrice / product.ProductPerList) + (product.Folds * pricePerFold) + brigadierCost
 	} else {
-		// Get custom combo
+		coveringPrice := FetchCustomCombo(colorID, coveringID)
+
+		product.Price = (coveringPrice / product.ProductPerList) + (product.Folds * pricePerFold) + brigadierCost
 	}
 }
 

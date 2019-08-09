@@ -168,6 +168,7 @@ connect:
 
 		anon.GET("products/", FetchAllProducts)
 		anon.GET("products/:id", FetchProductsBySubCatalog)
+		anon.GET("product/", FetchCustomComboPrice)
 
 		anon.POST("sign_up/", CreateUser)
 	}

@@ -8,6 +8,29 @@ import (
 	"github.com/google/logger"
 )
 
+func FetchCustomComboPrice(c *gin.Context) {
+	p := Product{}
+
+	row := db.QueryRow(
+		"select folds, product_per_list from products where id = ?",
+		c.Query("product_id"),
+	)
+
+	err := row.Scan(&p.Folds, &p.ProductPerList)
+
+	if err != nil {
+		logger.Errorf("[DB Query : FetchCustomCombo] %v", err)
+	}
+
+	colorID, _ := strconv.ParseInt(c.Query("color_id"), 10, 32)
+	coveringID, _ := strconv.ParseInt(c.Query("covering_id"), 10, 32)
+
+	EvaluateProduct(&p, colorID, coveringID)
+
+	logger.Infof("CustomComboPrice [%v] fetched", p.Price)
+	c.JSON(http.StatusOK, p.Price)
+}
+
 func FetchAllProducts(c *gin.Context) {
 	var products []Product
 

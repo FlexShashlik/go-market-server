@@ -26,11 +26,11 @@ type User struct {
 type Product struct {
 	ID             string `form:"id" json:"id"`
 	Name           string `form:"name" json:"name"`
-	Price          int    `form:"price" json:"price"`
+	Price          int64  `form:"price" json:"price"`
 	ImageExtension string `form:"image_extension" json:"image_extension"`
 	SubCatalogID   string `form:"sub_catalog_id" json:"sub_catalog_id"`
-	Folds          int    `form:"folds" json:"folds"`
-	ProductPerList int    `form:"product_per_list" json:"product_per_list"`
+	Folds          int64  `form:"folds" json:"folds"`
+	ProductPerList int64  `form:"product_per_list" json:"product_per_list"`
 }
 
 type Catalog struct {
