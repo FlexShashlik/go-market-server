@@ -4,7 +4,13 @@ This is the <b>server part</b> of my market app project. I attempted to do the o
 
 <hr>
 
-### Used libs:
+## Other parts of my project:
+- [Client](https://github.com/SevadaSahakyan/android-market-client)
+- [Admin](https://github.com/SevadaSahakyan/wpf-market-admin)
+
+<hr>
+
+## Used libs:
 - [Gin](https://github.com/gin-gonic/gin)
 - [JWT Middleware](https://github.com/appleboy/gin-jwt)
 - [SQL Driver](https://github.com/go-sql-driver/mysql)
