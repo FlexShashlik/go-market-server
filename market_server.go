@@ -39,7 +39,7 @@ func main() {
 	// Connect to the DB:
 connect:
 
-	db, err = sql.Open("mysql", "Sevada:LAliMDVIG24\\#@tcp(127.0.0.1:3306)/market")
+	db, err = sql.Open("mysql", "login:password@tcp(127.0.0.1:3306)/market")
 	if err != nil {
 		logger.Errorf("Connect to the DB failed: %v", err)
 		logger.Info("Tryna do it one more time...")
