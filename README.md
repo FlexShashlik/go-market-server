@@ -20,6 +20,6 @@ This is the <b>server part</b> of my market app project. I attempted to do the o
 
 ## Security
 
-I implemented session storing through the JWT and user's password hashing which made by the PBKDF2 and 10-symbolic salt.
+I implemented session storing through the JWT and user's password hashing which was made by the PBKDF2 and 10-symbolic salt.
 
 <hr>
